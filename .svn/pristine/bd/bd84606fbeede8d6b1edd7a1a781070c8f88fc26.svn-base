@@ -1,0 +1,116 @@
+{V "system","header"}
+<body class="body pxgridsbody"  >
+	<section class="wrapper" style="background-color: #f1f1f1; ">
+		<!-- page start-->
+		<div class="row">
+			<div class="col-lg-12">
+				<section class="panel panel-info" style="border: 1px solid #ccc;">
+					
+					<div class="panel-body" id="panel-bodys" style="padding: 10px;">
+						<div class="form-group">
+						      
+						        <div class="col-sm-2">
+						          <?php echo webuploader('path','','category/icon/'.date('Y/m/d',SYS_TIME),1,'jpg|jpeg|png',array('width'=>'140px','height'=>'140px'),false);?>
+						        </div>
+								<label class="col-sm-1"></label>
+						        <div class="col-sm-8">
+						        	<div class="row" style="padding: 4px;">
+						        	 	<label class="col-sm-2  control-label">名称</label>
+						        	 	
+						        	 	 <input type="text" id="name" class="col-sm-8" datatype="*"  value="">
+						        	 	
+						        	</div>
+						        	<div class="row"  style="padding: 4px;">
+						        	 	<label class="col-sm-2  control-label">描述</label>
+						        	 	 <input type="text" id="desc" class="col-sm-8" datatype="*"  value="">
+						        	</div>
+
+						        	<div class="row"  style="padding: 4px;">
+						        	 	<label class="col-sm-2 control-label"></label>
+						        	 	
+						        	 	 <button class="btn btn-info" id="submitForm">提交</button>
+						        	</div>
+						        </div>
+						</div>
+					
+						
+						
+					</div>
+
+					<div class="panel-body">
+						<div class="title">
+				            <h3><strong>icon列表</strong></h3>
+				            <hr>
+				        </div>
+				        <div class="row">
+							{loop $info $r}
+		                    <div class="col-md-2 text-center">
+		                        <img src="{$r['path']}" width="120px" alt="customer experience icon " class="animated swing">
+		                        <p class="shuoming_p"><span class="shuoming_title">{$r['name']}</span><br>{$r['desc']}</p>
+		                    </div>
+		                  {/loop}
+		                </div>
+					</div>
+				</section>
+			</div>
+		</div>
+		<!-- page end-->
+	</section>
+
+	<script src="/resource/js/bootstrap.min.js"></script>
+	<script src="/resource/js/jquery.nicescroll.js" type="text/javascript"></script>
+	<script src="/resource/js/pxgrids-scripts.js"></script>
+	<script src="/resource/js/hover-dropdown.js"></script>
+
+	<script type="text/javascript">
+		$(function(){
+			
+		
+			$('#submitForm').click(function(){
+				var name = $('#name').val();
+				var desc = $('#desc').val();
+				var path = '' ;
+				var isSubmit = true;
+				if($('input[name="path[]"]').val() != '' || $('input[name="path[]"]').val() != undefined){
+					path = $('input[name="path[]"]').val();
+				}
+
+				if(name  == ''){ 
+					layer.msg('名称不能为空');
+					isSubmit = false;
+				}
+				if(desc  == ''){ 
+					layer.msg('描述能为空');
+					isSubmit = false;
+				}
+				if(path  == ''){ 
+					layer.msg('选择图片');
+					isSubmit = false;
+				}
+				if(isSubmit){
+					$.ajax({
+					    url: '{U(1,"iconManage","index","create")}',
+					    type: 'POST',
+					    async: false,
+					    data: {
+					        name: name,
+					        desc:desc,
+					        path:path
+					    },
+					    success: function(result) {
+					        var data = JSON.parse(result);
+					        if(data.code == 200){
+					        	layer.msg(data.info);
+					        	window.location.href = "{U(1,"iconManage","index","success")}";
+					        }
+					    }
+					})
+				}
+				
+			})
+		})
+
+	</script>
+
+
+</body>

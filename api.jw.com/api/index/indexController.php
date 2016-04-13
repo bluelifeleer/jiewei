@@ -1,0 +1,236 @@
+<?php
+/**
+ * @Author: seaven
+ * @Date:   2015-12-31 15:30:33
+ * @Last Modified by:   anchen
+ * @Last Modified time: 2016-03-23 04:46:56
+ */
+
+class indexController extends Controller {
+	//Action  白名单
+	public $initphp_list = array('checkShop', 'getShop', 'getAdvert', 'getCate', 'productAllLists', 'getHotProduct');
+	//初始化继承父类
+	private $session;
+	public function __construct() {
+		parent::__construct();
+		$this->session = $this->getUtil('session');
+	}
+
+	/**
+	 * 检查店铺是否存在
+	 * @link http://api.jw.com/index/index/checkShop/siteid/1
+	 * @return [json] [json数据]
+	 */
+	public function checkShop() {
+		$fields = array('siteid');
+		$data_gp = $this->controller->get_gp($fields);
+		$data = array_filter($data_gp);
+		$where['userid'] = $data['siteid'];
+		$res = InitPHP::getRemoteService('shop', 'get', array($where));
+		$echoJson = array('code' => '0', 'msg' => '店铺不存在');
+		if ($res) {
+			$echoJson = array('code' => '1', 'msg' => '店铺存在');
+		}
+
+		//输出json数据
+		echo jsonEncode($echoJson);
+		exit();
+	}
+
+	/**
+	 * [getShopInfo 根据用户id获取店铺信息
+	 * @link http://api.jw.com/index/index/getShopInfo/userid/1
+	 * @return [json] [json数据]
+	 */
+	public function getShop() {
+		$fields = array('siteid');
+		$data_gp = $this->controller->get_gp($fields);
+		$data = array_filter($data_gp);
+		$where['userid'] = $data['siteid'];
+		$res = InitPHP::getRemoteService('shop', 'get', array($where));
+		$echoJson = array();
+		if ($res) {
+			$echoJson = $res;
+		}
+
+		//输出json数据
+		echo jsonEncode($echoJson);
+		exit();
+	}
+	/**
+	 * [getAdvert 获取商品广告信息]
+	 * @link http://api.jw.com/index/index/getAdvert/userid/1
+	 * @return [json] [description]
+	 */
+	public function getAdvert() {
+		$fields = array('siteid');
+		$data_gp = $this->controller->get_gp($fields);
+		$data = array_filter($data_gp);
+		$where['userid'] = $data['siteid'];
+		$res = InitPHP::getRemoteService('shopAdvert', 'lists', array($where, 200, 0));
+		if ($res['code'] == 0) {
+			$echoJson = $res['data'][0];
+		}
+
+		//输出json数据
+		echo jsonEncode($echoJson);
+		exit();
+	}
+	/**
+	 * [getCate 获取产品栏目信息]
+	 * @method getCate
+	 * @link http://api.jw.com/index/index/getCate/
+	 * @return [type]  [description]
+	 */
+	public function getCate() {
+		//　０　为共享库，其他为用户的userid
+		$fields = array('siteid');
+		$data_gp = $this->controller->get_gp($fields);
+		$data = array_filter($data_gp);
+		$where['siteid'] = isset($data['siteid']) ? $data['siteid'] : 0;
+		$where['parentid'] =  '0';
+		//module　　：　　system　共享商品库，store为店铺的栏目分类
+		//$where['module'] = isset($_GET['module'])?intval($_GET['module']):'system';
+		$res = InitPHP::getRemoteService('categories', 'lists', array($where, 0, 9));
+		if ($res['code'] == 0) {
+			$echoJson = $res['data'][0];
+		}
+
+		//输出json数据
+		echo jsonEncode($echoJson);
+		exit();
+	}
+	/**
+	 * [productLists 产品列表]
+	 * @link http://api.jw.com/index/index/productAllLists/
+	 * @method productLists
+	 * @return [type]       [description]
+	 */
+	public function productAllLists() {
+		$fields = array('siteid');
+		$data_gp = $this->controller->get_gp($fields);
+		$data = array_filter($data_gp);
+		//查询条件
+		$where = $data;
+		$where['userid'] = $data['siteid'];
+		$where['status'] = 99;
+		$where['is_up'] = 99;
+		unset($where['siteid']);
+		// //is_recycled = 1存在仓库中 99 存在于回收站
+		// $where['is_recycled'] = 1;
+		// //上架属性 99 为上架  1下架
+		// $where['is_up'] = 99;
+		//分页量
+		$offset = $_GET['offset'];
+		//页码
+		$page = max((int) $_GET['pages'], 1);
+		//sql limit 限制
+		$limit = ($page - 1) * $offset;
+		//排序字段
+		$order = 'update_time';
+		//排序方式
+		$sort = 'desc';
+		//调用产品服务list
+
+		$res = InitPHP::getRemoteService('product', 'indexLists', array(
+			$where,
+			$offset,
+			$limit,
+			$order,
+			$sort,
+			'id,title,catid,thumb,sale_price,sales,fromid,is_up,is_recycled,fromid,stock,sysadd',
+		));
+
+        //var_dump($res);die();
+		$total = '0';
+		$code = '0';
+		if ($res['code'] == 0) {
+			$info = $res['data'][0];
+			foreach ($info as $key => $value) {
+				if ($value['is_up'] != 99 && $value['is_recycled'] != 1) {
+					unset($info[$key]);
+				}
+			}
+			$total = $res['data'][1];
+			$code = '1';
+		}
+		foreach ($info as $key => $value) {
+			$info[$key]['thumb'] = picThumbSrc($value['thumb'], 200, 200);
+		}
+		if (empty($info)) {
+			$code = '0';
+		}
+
+		$echoJson = array('code' => $code, 'data' => array_values($info), 'total' => $total);
+
+		//输出json数据
+		echo jsonEncode($echoJson);
+		exit();
+	}
+	/**
+	 * [getHostProduct 获取热门产品]
+	 * @link http://api.jw.com/index/index/getHotProduct/
+	 * @method getHostProduct
+	 * @return [type]         [description]
+	 */
+	public function getHotProduct() {
+		$fields = array('siteid');
+		$data_gp = $this->controller->get_gp($fields);
+		$data = array_filter($data_gp);
+		//热门商品查询条件
+		$where['userid'] = $data['siteid'];
+		$where['status'] = 99;
+		$where['is_up'] = 99;
+		// //is_recycled = 1存在仓库中 99 存在于回收站
+		// $where['is_recycled'] = 1;
+		$where['is_hot'] = 1; //1为热门 99 为非热门
+		// //上架属性 99 为上架  1下架
+		// $where['is_up'] = 99;
+		//分页量
+		$offset = 5;
+		//页码
+		$page = max((int) $_GET['pages'], 1);
+		//sql limit 限制
+		$limit = ($page - 1) * $offset;
+		//排序字段
+		$order = 'update_time';
+		//排序方式
+		$sort = 'desc';
+		$res = InitPHP::getRemoteService('product', 'lists', array(
+			$where,
+			$offset,
+			$limit,
+			$order,
+			$sort,
+			'id,title,thumb,is_up,is_recycled,fromid',
+		));
+
+		$total = '0';
+		$code = '0';
+		if ($res['code'] == 0) {
+			$info = $res['data'][0];
+			foreach ($info as $key => $value) {
+				if ($value['is_up'] != 99 && $value['is_recycled'] != 1) {
+					unset($info[$key]);
+				}
+			}
+			$total = $res['data'][1];
+			$code = '1';
+		}
+		foreach ($info as $key => $value) {
+			$info[$key]['thumb'] = picThumbSrc($value['thumb'], 200, 200);
+
+		}
+		if (empty($info)) {
+			$code = '0';
+		}
+
+		$echoJson = array('code' => $code, 'data' => $info, 'total' => $total);
+
+		//输出json数据
+		echo jsonEncode($echoJson);
+		exit();
+
+	}
+
+}

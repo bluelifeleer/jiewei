@@ -1,0 +1,144 @@
+<?php
+/**
+ * 评论服务层
+ * @Author: 明艺
+ * @Date:   2016-1-1 16:14:20
+ * @Last Modified time: 2016-1-1 16:14:20
+ */
+class commentService extends Service {
+	private $DB;
+
+	public function __construct() {
+		parent::__construct();
+		//获取Dao
+		$this->DB = InitPHP::getDao('comment');
+	}
+
+	/**
+	 * 获取单条
+	 * @param  [array] $where [查询条件]
+	 * @return [array]        [单条数据]
+	 */
+	public function get($where) {
+		$data = $this->DB->get($where);
+		if ($data) {
+			return InitPHP::Encode(0, 'Success', $data, 1);
+		} else {
+			return InitPHP::Encode(3, 'Error', $data, 1);
+		}
+	}
+
+	/**
+	 * 获取列表
+	 * @param  array   $where  [description]
+	 * @param  integer $offset [description]
+	 * @param  integer $num    [description]
+	 * @param  string  $order  [description]
+	 * @param  string  $sort   [description]
+	 * @param  string  $key    [description]
+	 * @param  string  $fileds [description]
+	 * @return [array]          [description]
+	 */
+	public function lists($where = array(), $num = 10, $offset = 0, $order = 'product_id', $sort = 'asc', $key = 'evaluate_id', $fileds = '*') {
+		$data = $this->DB->lists($where, $num, $offset, $order, $sort, $key, $fileds);
+		if ($data) {
+			return InitPHP::Encode(0, 'Success', $data, 1);
+		} else {
+			return InitPHP::Encode(1, 'Error', $data, 1);
+		}
+	}
+
+	/**
+	 * 更新
+	 * @param  [array] $data  [更改的数据]
+	 * @param  [array] $where [更改的条件]
+	 * @return [bool]        [true or false]
+	 */
+	public function update($data, $where) {
+		$state = $this->DB->update($data, $where);
+		if ($state) {
+			return InitPHP::Encode(0, 'Success', $state, 1);
+		} else {
+			return InitPHP::Encode(1, 'Error', $state, 1);
+		}
+	}
+
+	/**
+	 * 新增
+	 * @param  [array] $data [description]
+	 * @return [boolen or int]       [成功则返回主键自增ｉｄ，失败则返回flase]
+	 */
+	public function create($data) {
+		//开启事务
+		$this->DB->transaction_start();
+
+		$create_id = $this->DB->create($data);
+
+		//判断订单中除当前商品外，是否所有的商品都评价完成
+		$is_comment = false;
+		$orderGoodsList = InitPHP::getDao('orderGoods')->lists(array('order_id' => $data['order_id']));
+
+		//如果订单中只有一款商品
+		$goodsArr = $orderGoodsList[0];
+		if (count($goodsArr) == 1) {
+			$is_comment = true;
+		} else {
+			//多款商品
+			for ($i = 0; $i < count($goodsArr); $i++) {
+				//除当前要评价的商品外所有的商品都已评价完成
+				//排除当前的商品
+				if ($goodsArr[$i]['goods_id'] == $data['product_id']) {
+					array_splice($goodsArr, $i, 1);
+				}
+			}
+
+			for ($j = 0; $j < count($goodsArr); $j++) {
+				if (intval($goodsArr[$j]['is_comment']) == 1) {
+					$is_comment = true;
+				} else {
+					$is_comment = false;
+				}
+			}
+
+		}
+
+		
+
+		//如果所有的商品都评价完成，则更新订单状态为已评价
+		$updateOrderInfoStatus = false;
+		if ($is_comment) {
+			//评论成功，修改商品状态
+			$updataOrderGoodsStatus = InitPHP::getDao('orderGoods')->update(array('is_comment' => 1, 'goods_status' => 5), array('order_id' => $data['order_id'], 'goods_id' => $data['product_id']));
+			//更新订单状态
+			$updateOrderInfoStatus = InitPHP::getDao('order')->update(array('order_status' => 5), array('userid' => $data['userid'], 'order_id' => $data['order_id']));
+		} else {
+			//评论成功，修改商品状态
+			$updataOrderGoodsStatus = InitPHP::getDao('orderGoods')->update(array('is_comment' => 1, 'goods_status' => 5), array('order_id' => $data['order_id'], 'goods_id' => $data['product_id']));
+			$updateOrderInfoStatus = true;
+		}
+
+		if ($create_id && $updataOrderGoodsStatus && $updateOrderInfoStatus) {
+			//提交事务
+			$this->DB->transaction_commit();
+			return InitPHP::Encode(0, 'Success', $create_id, 1);
+		} else {
+			//关闭事务
+			$this->DB->transaction_rollback();
+			return InitPHP::Encode(1, 'Error', $create_id, 1);
+		}
+	}
+
+	/**
+	 * 删除
+	 * @param  [type] $ids [一个或者多个值 1,2,3]
+	 * @return [type]      [description]
+	 */
+	public function delete($ids) {
+		$state = $this->DB->delete($ids);
+		if ($state) {
+			return InitPHP::Encode(0, 'Success', $state, 1);
+		} else {
+			return InitPHP::Encode(1, 'Error', $state, 1);
+		}
+	}
+}

@@ -1,0 +1,295 @@
+<?php
+/**
+ * 店铺管理
+ * @Author: 明艺
+ * @Date:   2016-1-19 23:04:50
+ * @Last Modified time: 2016-1-19 23:04:50
+ */
+
+class indexController extends Controller
+{
+    //Action白名单
+    public $initphp_list = array(
+        'init',
+        'lists',
+        'productList',
+        'verify',
+        'delete',
+        'gifts'
+    );
+    
+    public function  __construct(){
+        parent::__construct();
+        $this->userid = $userid = (int)$this->getUtil('session')->get('admin_userid');
+        if ($userid) {
+            $this->memberinfo = InitPHP::getRemoteService('admin', 'get', array($userid));
+        }
+        //判断是否登入状态
+        InitPHP::getService("admin")->check_admin();
+    }
+
+    /**
+     * 框架
+     */
+    public function init() {
+        include V('shop', 'init');
+    }
+    
+    /**
+     * 店铺列表
+     */
+    public function lists() {
+        $fileds = array(
+            'like'
+        );
+
+        $where = $this->controller->get_gp($fileds);
+
+        $offset = 25;
+        $page = max((int)$_GET['page'], 1);
+        $limit = ($page - 1) * $offset;
+
+        if($where['like']){
+            $data = InitPHP::getRemoteService('shop', 'query_select', array($where['like'], $limit, $offset));
+        }else{
+            if($where['like'] == null) unset($where['like']);
+            $data = InitPHP::getRemoteService('shop', 'lists', array($where, $offset, $limit));
+        }
+
+        $info = $data[0];
+        $total = $data[1];
+
+        $pages = pages($total, $page, $offset, $urlrule = '', $variables = array(), 10, array('like'=>$where['like']));
+        $like = $where['like'];
+
+        include V('shop', 'list');
+    }
+
+
+     /**
+     * [commontProduct 普通产品列表，商铺发布的产品，就是除平台发布的产品之外的产品
+     * @return [type] [description]
+     */
+    public function productList(){
+
+
+        //默认显示共享模型数据，即modelid为0.
+        //默认status为9 通过审核
+        $title = isset($_GET['title']) ? sql_replace($_GET['title']) : '';
+        $userid = isset($_GET['userid']) ? sql_replace($_GET['userid']) : '';
+        $status = isset($_GET['status']) ? intval($_GET['status']) : '0';
+        $catid = isset($_GET['catid']) ? intval($_GET['catid']) : 0;
+        $categorys = array();
+        $_result = InitPHP::getRemoteService('categories', 'lists', array(array('module'=>'site','siteid'=>$userid), 0, 2000,'listorder','ASC','catid','*'));
+        if($_result['code']==0)  $categorys = $_result['data']['0'];
+
+
+        $where = "`is_recycled`='1' AND `userid`='$userid' AND `sysadd`='0' AND `fromid` is null ";
+
+        $where .= "AND `status`='$status'";
+
+        if($title) $where .= " AND `title` LIKE '%$title%'";
+
+        $cids = array();
+
+        if(!empty($categorys))
+
+        foreach($categorys as $_cid=>$_res) {
+            $cids[] = $_cid;
+        }
+        if(!empty($cids)) {
+            $cids = implode(',',$cids);
+            $where .= " AND `catid` IN($cids)";
+        }
+
+
+        $offset = 15;
+        $page = max((int) $_GET['page'], 1);
+        $limit = ($page - 1) * $offset;
+        $order = 'id';
+        $sort = 'desc';
+
+         
+        $result = InitPHP::getRemoteService('product', 'lists', array($where,$offset,$limit,$order,$sort));
+        $datas = $result['code']==0?$result['data']['0']:array();
+
+        $tatol = (int)$result['data']['1'];
+        var_dump( $tatol);
+        $pages = pages($tatol, $page, $offset);
+
+      include V('shop','product_listing');
+
+    }
+    private $status_array = array(
+                            99=>'审核通过',
+                            1=>'审核不通过',
+                            0=>'待审核',
+                        );
+
+    private function _status($status) {
+        $status_array = $this->status_array;
+        $string = '';
+        foreach($status_array as $k=>$s) {
+            if($k==$status) {
+                $string .= '<a href="#" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" data-hover="dropdown"><i class="icon-check btn-icon"></i>'.$s.'<span class="caret"></span></a>';
+            }
+        }
+        $string .= '<ul class="dropdown-menu">';
+        foreach($status_array as $k=>$s) {
+            if($k!=$status) {
+                $url = URL().'&status='.$k;
+                $url = url_unique($url);
+                $string .= '<li><a href="?'.$url.'">'.$s.'</a></li>';
+            }
+        }
+        $string .= '</ul>';
+        return $string;
+    }
+    /**
+     * [verify 产品审核]
+     * @return [type] [description]
+     */
+    public function verify(){
+        $fileds = array('ids','status');
+        $data_gp = $this->controller->get_gp($fileds);
+        $data = array_filter($data_gp);
+
+        $ids = $data['ids'];
+        if(isset($ids) && $ids != '') $where= explode(',',$ids);
+        else $where = array();
+
+
+        $status = $data['status'];
+       
+        if(isset($status) && $status != ''){
+            $Res = InitPHP::getRemoteService('product','approval',array($where,$status));
+
+        }
+        if ($Res) {
+            echo jsonEncode(array(
+                'code' => 200,
+                'info' => '操作成功'
+            ));
+            exit();
+        } else {
+            echo jsonEncode(array(
+                'code' => 300,
+                'info' => '操作失败'
+            ));
+            exit();
+        }
+    }
+
+
+    /**
+     * 添加店铺
+     */
+    public function logisCreate() {
+        if (isset($_POST['dosubmit'])) {
+            $fileds = array(
+                'name',
+                'url',
+                'com'
+            );
+            $data = $this->controller->get_gp($fileds);
+            
+            // var_dump($data);die();
+
+            if (!trim($data['name'])) {
+                showmessage('带*的为必填项，请填写完整', 'goback');
+            } else {
+                if (InitPHP::getRemoteService('shop', 'create', array($data))) {
+                    showmessage('添加成功', '/index.php?m=shop&c=index&a=lists');
+                } 
+                else {
+                    showmessage('添加失败', '/index.php?m=shop&c=index&a=lists');
+                }
+            }
+        } else {
+            include V('shop', 'logis_create');
+        }
+    }
+
+    /**
+     * 修改店铺
+     */
+    public function logisUpdate() {
+        if (isset($_POST['dosubmit'])) {
+            $fileds = array(
+                'name',
+                'url',
+                'com'
+            );
+            $data = $this->controller->get_gp($fileds);
+            
+            // var_dump($data);die();
+
+            if (!trim($data['name'])) {
+                showmessage('带*的为必填项，请填写完整', 'goback');
+            } else {
+                if (InitPHP::getRemoteService('shop', 'update', array($data,array('id'=>$_POST['id'])))) {
+                    showmessage('修改成功', '/index.php?m=shop&c=index&a=lists');
+                } else {
+                    showmessage('修改失败', '/index.php?m=shop&c=index&a=lists');
+                }
+            }
+        } else {
+            $fileds = array('id');
+            $where = $this->controller->get_gp($fileds);
+            $data = InitPHP::getRemoteService('shop', 'get', array($where));
+            
+            include V('shop', 'logis_update');
+        }
+    }
+
+    /**
+     * 删除店铺
+     */
+    public function delete() {
+        $fileds = array('userid');
+        $where = $this->controller->get_gp($fileds);
+        
+        $result = InitPHP::getRemoteService('shop', 'delete', array($where['userid']));
+        
+        if ($result['data']) {
+            echo json_encode(array('code' => 200));
+        } else {
+            echo json_encode(array('code' => 300));
+        }
+    }
+    /**
+    * 开店送礼
+    */
+    public function gifts(){
+       
+        $offset = 15;
+        $page = max((int) $_GET['page'], 1);
+        $limit = ($page - 1) * $offset;
+        
+        
+        $where['type'] = 2;
+        $result =   InitPHP::getRemoteService('storeData', 'lists', array($where,$limit = 0, $offset = 20));
+        $infos = $result['1'] > 0 ?$result['0']:array();
+        if(count($infos) > 0 ){
+            foreach ($infos as $key => $value) {
+                # code...
+                $info[$key]['id'] = $value['id'];
+                $info[$key]['type'] = $value['type'];
+                $info[$key]['state'] = $value['state'];
+                $info[$key]['address'] = json_decode($value['shop_info'],true)['address'];
+                $info[$key]['shopname'] = json_decode($value['shop_info'],true)['name'];
+                $info[$key]['truename'] = json_decode($value['shop_info'],true)['username'];
+                $info[$key]['telphone'] = json_decode($value['shop_info'],true)['phone'];
+                $info[$key]['userid'] = json_decode($value['user_info'],true)['userid'];
+                $info[$key]['nickname'] = json_decode($value['user_info'],true)['nickname'];
+                $info[$key]['addtime'] = date("Y-m-d H:i:s",$value['addtime']);
+
+            }
+        }
+        $tatol = (int)$result['1'];
+        $pages = pages($tatol, $page, $offset);
+         include V('shop', 'gifts_list');
+     
+      
+    }
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Apple devices fullscreen -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta charset="UTF-8">
+<title>提示：{$msg}</title>
+<link href="/templates/default/css/index.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div class="msgpage">
+  <div class="msgbox">
+    <div class="pic"></div>
+    <div class="con">{$msg}</div>
+        <div class="scon">页面如不能自动跳转，选择手动操作...</div>
+    <div class="button">
+    {if $backUrl=='goback' || $backUrl==''}
+    <a href="javascript:history.back();" >[点这里返回上一页]</a>
+    <script type="text/javascript"> window.setTimeout("javascript:history.back();",{$timeout}); </script>
+    {elseif $backUrl=="close"}
+    <input type="button" name="close" value=" 关闭 " onClick="window.close();">
+    {elseif $backUrl=="dialog"}
+    <script>
+    top.window.frames['{$timeout}'].location.reload();
+    top.dialog.get(window).close().remove();
+    </script>
+    {elseif $backUrl}
+    <a href="{strip_tags($backUrl)}">如果您的浏览器没有自动跳转，请点击这里</a>
+    <script type="text/javascript"> window.setTimeout("javascript:location.href='{$backUrl}'",{$timeout}); </script>
+    {/if}
+      
+          </div>
+        <div class="powerby">Power By <font color="blue">www</font><font color="orange">.zj3w</font>.net</div>
+  </div>
+</div>
+</body>
+</html>

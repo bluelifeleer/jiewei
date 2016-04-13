@@ -1,0 +1,9 @@
+{V "system","header"}
+<body class="body">
+<section id="iframecontent">
+    <iframe  width="100%" name="iframeid" id="iframeid" frameborder="false" scrolling="auto" height="auto" allowtransparency="true" frameborder="0" src="?m=shop&c=index&a=lists&_menuid=<?php echo $_GET['_menuid'];?>"></iframe>
+</section>
+<script src="/resource/js/bootstrap.min.js"></script>
+<script src="/resource/js/contentiframe.js"></script>
+</body>
+</html>

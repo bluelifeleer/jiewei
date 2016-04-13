@@ -1,0 +1,52 @@
+{V "system","header"}
+<body class="body pxgridsbody" style="background-color: #fff;">
+<section class="wrapper">
+<div class="row">
+<div class="col-lg-12">
+<section class="panel">
+    <div class="panel-body">
+        <form class="form-horizontal tasi-form" method="post"  id="zuanAddCate" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">物流公司名<font style="color: #f00;">*</font></label>
+                <div class="col-sm-4 input-group">
+                    <input type="text" class="form-control" datatype="*" name="name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">接口地址<font style="color: #f00;"></font></label>
+                <div class="col-sm-4 input-group">
+                    <input type="text" class="form-control" name="url">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">快递公司英文代码<font style="color: #f00;"></font></label>
+                <div class="col-sm-4 input-group">
+                    <input type="text" class="form-control" name="com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label"></label>
+                <div class="col-sm-10 input-group">
+                    <input type="hidden" name="dosubmit" value="1">
+                    <!-- <input type="hidden" name="cat_id" value="{$data['cat_id']}"> -->
+                    <button class="btn btn-info" id="submitBtn">提交</button>
+                    <a class="btn btn-info btn-danger" target="iframeid" href="{U($url,'logistics','index','lists',array('page'=>$page))}">返回</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+</div>
+</div>
+<!-- page end-->
+</section>
+<script src="/resource/js/bootstrap.min.js"></script>
+<script src="/resource/js/jquery.nicescroll.js" type="text/javascript"></script>
+<script src="/resource/js/pxgrids-scripts.js"></script>
+<script type="text/javascript">
+    $(function(){
+        $(".form-horizontal").Validform({
+            tiptype:3
+        });
+    })
+</script> 

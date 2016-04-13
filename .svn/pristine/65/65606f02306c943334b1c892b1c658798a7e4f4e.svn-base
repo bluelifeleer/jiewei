@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>云兆●云商城</title>
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+		<link rel="shortcut icon" href="/favicon.ico">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<link rel="stylesheet" href="/sources/css/sm.min.css"/>
+        <link rel="stylesheet" href="/sources/css/sm-extend.min.css"/>
+		<link rel="stylesheet" href="/sources/css/demos.css">
+		<link rel="stylesheet" href="/sources/css/add.css">
+	</head>
+	<body>
+    	<!-- page 容器 -->
+		<div class="page" id="page-register">
+			<!-- 标题栏 -->
+			<header class="bar bar-nav">
+				<h1 class="title"><a class="external" href="/sources/js/module/public.js">免费注册<a></h1>
+				<a class="pull-left back " href="login.php">
+					<i class="icon iconfont mar0 fs13 white">&#xe61b;</i>
+				</a>
+			</header>
+			<div class="content pad15">
+				<input class="w100b bor1 bce6 bgfff pad10" id="phone" type="number" placeholder="手机号">
+				<span id="tcp" class="w100b h30 lh30" style="display:none">手机号必须是非字母的11位数字</span>
+				<p class="w100b h40 mar0 mart10">
+					<input type="number" value="" id="input-verification-code-box" class="block fll w60b h40 lh40 bor1 bce6 padl10" style="box-sizing:border-box" placeholder="输入获取到的短信验证码" />
+					<span class="block fll w40b h40 lh40 fs07 txac bg04980B white" data-is-send="true" id="send-valiDate-code-but">发送验证码(60)</span>
+				</p>
+				<p class="mar0 mart10"><span id="next-but" class="block w100b h50 lh50 txac white borrad6 bgfa6a0b ">下一步</span></p>
+				<p class="block w100b h60 lh60 txac ftwghtb"><i class="inlineblock h50 lh50 mar0 iconfont cCB1408 fs08 padr10">&#xe66e;</i><a class="inlineblock h50 lh50 cCB1408 fs08 external" href="login.php">已有帐号？直接登录</a></p>
+			</div>
+		</div>
+	</body>
+<script type="text/javascript" src="/sources/js/zepto-full.1.1.6.min.js"></script>
+<script type="text/javascript" src="/sources/js/sm.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/sm-extend.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/module/public.js"></script>
+<script type="text/javascript" src="/sources/js/module/jweixin-1.0.0.js"></script>
+
+<script type="text/javascript" src="/sources/js/webuploader.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.all.js"> </script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+<script type='text/javascript' data-main="/sources/js/app.js" src='/sources/js/require.js' charset='utf-8'></script>
+</html>

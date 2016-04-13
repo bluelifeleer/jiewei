@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>云兆云商城</title>
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+		<link rel="shortcut icon" href="/favicon.ico">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<link rel="stylesheet" href="/sources/css/sm.min.css"/>
+        <link rel="stylesheet" href="/sources/css/sm-extend.min.css"/>
+		<link rel="stylesheet" href="/sources/css/demos.css">
+	<link rel="stylesheet" href="/sources/css/add.css">
+	</head>
+	<body>
+		<!-- page 容器 -->
+		<div class="page" id="page-product-list">
+			<!-- 标题栏 -->
+			<header class="bar bar-nav">
+				<h1 class="title">商品列表</h1>
+				<a class="pull-left open-panel" id="product-list-cate" data-panel="#categories-popup" href="javascript:void(0);">
+					<i class="icon iconfont mar0 white fs13">&#xe630;</i>
+				</a>
+			</header>
+
+  		<!-- 工具栏 -->
+  		<nav class="bar bar-tab">
+  			<span class="toools-bar-but tab-item external active" style="cursor:pointer;" id="shop-index" data-but-type="index">
+  				<i class="icon iconfont">&#xe640;</i>
+  				<span class="tab-label">首页</span>
+  			</span>
+  			<span class="toools-bar-but tab-item" style="cursor:pointer;">
+  				<i class="icon iconfont">&#xe684;</i>
+					<span class="tab-label">云兆云商</span>
+  			</span>
+  			<span class="toools-bar-but tab-item" data-but-type="cart" style="cursor:pointer;">
+  				<i class="icon iconfont">&#xe62e;</i>
+  				<span class="tab-label">购物车</span>
+  			</span>
+  			<span class="toools-bar-but tab-item" data-but-type="order" style="cursor:pointer;">
+  				<i class="icon iconfont">&#xe661;</i>
+  				<span class="tab-label">订单</span>
+  			</span>
+  			<span class="toools-bar-but tab-item " data-but-type="member" style="cursor:pointer;">
+  				<i class="icon iconfont">&#xe65e;</i>
+  				<span class="tab-label">我的</span>
+  			</span>
+  		</nav>
+
+			<div class="bar bar-header-secondary bgfff  padl0 padr0 h40">
+			<div class="row no-gutter mar0 pad0">
+				<div class="col-25 mar0 pad0 borr1 borb1 bceee bgfff" id="product-default-sort" style="text-align: center; cursor: pointer;">
+					 <span class="w100b bgfff  h100b bor0"><span class="fs07 ccb1408">默认</span></span>
+				</div>
+				<div class="col-25 mar0 pad0 borr1 borb1 bceee bgfff" id="product-sales-sort" style="text-align: center;cursor: pointer;">
+					 <span class="w100b bgfff  h100bbor0"><span class="fs07 ccb1408">销量</span></span>
+				</div>
+				<div class="col-25 mar0 pad0 borr1 borb1 bceee bgfff" id="product-prices-sort" style="text-align: center;cursor: pointer;">
+					 <span class="w100b bgfff  h100bbor0"><span class="fs07 ccb1408">价格</span></span>
+				</div>
+				<div class="col-25 mar0 pad0  borr1 borb1 bceee bgfff" id="_product-filter" style="text-align: center;cursor: pointer;">
+					 <span href="javascript:void(0);" class="w100b bgfff h100b bor0" ><span class="fs07 ccb1408 " >&nbsp;<!-- 筛选 --></span></span>
+				</div>
+		</div>
+		  </div>
+
+
+			<div class="content infinite-scroll close-panel" style="top:3.6rem;" >
+					<div class="list-container"></div>
+					<!-- 加载提示符 -->
+					<div class="infinite-scroll-preloader">
+							<div class="preloader"></div>
+							<div class="preloader_null disn fs06">没有更多的商品了</div>
+					</div>
+
+			</div>
+
+	</div>
+
+	<!-- Left Panel with Reveal effect -->
+	<div class="panel panel-list-categories panel-left panel-reveal bgf4 c333" id="categories-popup">
+		<div class="padl15" style="height:2.2rem; line-height:2.2rem;text-align:center; ">商品分类</div>
+		<div class="list-block" >
+			 <ul id="cateItem">
+
+
+			</ul>
+
+		</div>
+	</div>
+
+
+	<div class="panel panel-right panel-reveal  c333 bgfff" id="product-filter-popup">
+		<div class="padl15 bgf4" style="height:2.2rem; line-height:2.2rem;text-align:center;">筛选条件</div>
+		<div class="list-block " >
+		筛选条件
+		</div>
+	</div>
+	</body>
+<script type="text/javascript" src="/sources/js/zepto-full.1.1.6.min.js"></script>
+<script type="text/javascript" src="/sources/js/zepto.picLazyLoad.min.js"></script>
+<script type="text/javascript" src="/sources/js/sm.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/sm-extend.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/module/public.js"></script>
+<script type="text/javascript" src="/sources/js/module/jweixin-1.0.0.js"></script>
+
+<script type="text/javascript" src="/sources/js/webuploader.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.all.js"> </script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+<script type='text/javascript' data-main="/sources/js/app.js" src='/sources/js/require.js' charset='utf-8'></script>
+</html>

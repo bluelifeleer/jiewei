@@ -1,0 +1,17 @@
+$(function () {
+	// 我的业绩
+	  'use strict';
+		$(document).on('pageInit','#page-achievement',function(e,id,page){
+			$(page).on('click','.show-list',function(){
+				if($(this).attr('data-is-show') == "false"){
+					$(this).attr('data-is-show',true);
+				 	$('.show-ico').html('&#xe628;');
+				 	$('.show-detail-list').animate({height:'400px'},1800,'linear');
+				 }else{
+				 	$(this).attr('data-is-show',false);
+				 	$('.show-ico').html('&#xe640;');
+				 	$('.show-detail-list').animate({height:0},200,'linear');
+				 }
+			});
+		});
+})

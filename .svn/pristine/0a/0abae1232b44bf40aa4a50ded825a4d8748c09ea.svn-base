@@ -1,0 +1,397 @@
+/*
+* @Author: shaobo
+* @Date:   2016-01-01 21:35:07
+* @Last Modified by:   anchen
+* @Last Modified time: 2016-03-17 14:56:58
+*/
+$(function(){
+        $(document).on('pageInit', '#page-manage-add-goods', function(e, id, page) {
+          var proCount = 0;
+          var category = '';
+          var url = encodeURI(apiUrl + 'shop/index/getShopCate');
+          $.ajax({
+              url: url,
+              async: false,
+              type: 'GET',
+              data: {
+                  module:'site',
+              },
+              headers: {
+                  "Token": sso_Token
+              },
+              success: function(result) {
+                  var data = $.parseJSON(result);
+                  $.each(data, function(catid, cat) {
+                      if(cat.parentid == 0){
+                        if (cat.child == 0) {
+                            category += '<a class="open-popup-product-import" data-id="'+catid+'">';
+                        }else{
+                            category += '<a href="javascript:void(0);" class="external">'; 
+                        } 
+                          var numHtml = cat.child == 0 ? '<span class="badge_'+catid+'">0</span>' : '';
+                          
+                          category += '<li class="item-content">';
+                          category += '<div class="item-media">';
+                          category += '<i class="icon icon-right"></i></div>';
+                          category += '<div class="item-inner">';
+                          category += '<div class="_catename item-title">' + cat.catname + '</div>';
+                          if(cat.child == 0){
+                            category += '<div class="item-after">' + numHtml + '</div>';
+                          }
+                          
+                          
+                          category += '</div>';
+                          category += '</li>';
+                          category += '</a>';
+                          var parid = cat.arrchildid.split(",");//字符串转换成数组
+
+                          cateid = parid.splice(0,1);//删除父类id
+                          
+                          if(parid){
+                              $.each(parid, function(index, value) {
+                                  var catitems = data[value] || {};
+                                  // href="apply_shop_import_goods_main.html?&fromcatid=' + data[value].catid + '"
+                                  category += '<a class="open-popup-product-import" data-id="'+data[value].catid+'">';
+                                  category += '<li class="item-content">';
+                                  category += '<div class="item-media">';
+                                  category += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>';
+                                  category += '<div class="item-inner">';
+                                  category += '<div class="_catename item-title">' + data[value].catname + '</div>';
+                                  category += '<div class="item-after"><span class="badge_'+data[value].catid+'">0</span></div>';
+                                  //proCount = proCount + catitems.length;
+                                  category += '</div>';
+                                  category += '</li>';
+                                  category += '</a>';
+                              })
+                          }
+                          
+                      }
+                  })
+
+                  $('#cate-list-block').html(category);
+                  $('.page-current #pro_number').html('0');
+              }
+          })
+            //点击进入导入页面
+            $(page).on('click','.open-popup-product-import',function(){
+
+              //获取点击栏目的catid
+              var catid = $(this).attr('data-id');
+              //赋值到popup页面的导入按钮dom的属性data-id
+              $('.popup-product-import #finish-add-goods-but').attr('data-id',catid)
+
+
+             //商品列表
+                var siteid = 1;
+                var loading = false;
+                var pages = 1;
+                var offset = 8;
+                var orderby = 1;
+                var catid =  0;
+                var max = addItems(offset, pages, orderby ,catid,siteid);
+
+                /**
+                * 下拉列表
+                * @param
+                */
+                $(page).on('infinite', function() {
+                // 如果正在加载，则退出
+                    var siteid = 1;
+                    if (loading) return false;
+                    loading = true;
+                        if (max > (pages * offset)) {
+                        // 更新页码
+                            pages++
+                            // 添加新条目
+                            var cateid = sessionStorage.getItem('panel-categories-catid');
+                            max = addItems(offset, pages, orderby,cateid,siteid);
+                            // 重置加载flag
+                            loading = false;
+                            // 容器发生改变,如果是js滚动，需要刷新滚动
+                            $.refreshScroller();
+                        }else{
+                            // 加载完毕，则注销无限加载事件，以防不必要的加载
+                            $.detachInfiniteScroll($('.infinite-scroll'));
+                            // 删除加载提示符
+                            //$('.infinite-scroll-preloader').remove();
+                            $(".preloader_null").removeClass("disn");
+                            $(".preloader").addClass("disn");
+                            return false;
+                    }
+                });
+
+                var html = '';
+                html += '<div class="panel  panel-left panel-reveal bgf4 c333" id="panel-shop-product-list-cate">';
+                html += '<div class="padl15 c333" style="height:2.2rem; line-height:2.2rem;text-align:center; ">商品分类</div>';
+                html += '<div class="list-block" >';
+                html += '<ul  id="cateItem">';
+                html += '</ul>';
+                html += '</div>';
+                html += '</div>';
+
+                $('#popup-product-import').append(html);
+
+                $.popup('#popup-product-import');
+
+
+                var cateInfo = getPlatFormCate();
+                if(!$.isEmptyObject(cateInfo)){
+                      var html = '';
+                      html += '<li class="item-content item-cate" data-catid="0" style="min-height: 1.2rem;">';
+                      html += '<div class="item-inner c666 borb1 bceee" style="min-height: 1.2rem;">';
+                      html += '<div class="item-title fs06 c666">全部商品</div>';
+                      html += '<div class="item-after"><i class="icon iconfont mar0 c666 flr fs05 arrowr disi">&#xe648</i></div>';
+                      html += '</div>';
+                      html += '</li>';
+                      $.each(cateInfo,function(index, el){
+                        html +='<li class="item-content item-cate" data-catid="'+el.catid+'" style="min-height: 1.2rem;">';
+                        html += '<div class="item-inner c666 borb1 bceee" style="min-height: 1.2rem;">';
+                        html += '<div class="item-title fs06 c666">'+el.catname+'</div>';
+                        html += '<div class="item-after"><i class="icon iconfont mar0 c666 flr fs05 arrowr disi">&#xe648;</i></div>';
+                        html += '</div>';
+                        html += '</li>';
+                    });
+                    $('#cateItem').html(html);
+
+                    $('.item-cate').bind("click", function(){
+                        var cateid = $(this).attr('data-catid');
+                        sessionStorage.setItem('panel-categories-catid',cateid);
+                        var siteid = 1;
+                        var loading = false;
+                        var pages = 1;
+                        var offset = 8;
+                        var orderby = 1;
+                        $('.infinite-scroll .list-container').html('');
+                        var max = addItems(offset, pages, orderby ,cateid ,siteid);
+                    });
+                }
+            });
+
+
+            $('#popup-product-import').on('open', function () {
+              $('#popup-page-product-import').css({
+                display: 'block'
+              });
+            });
+
+
+            $('#popup-product-import').on("click",".select-but",function(){
+
+                if($(this).attr('data-is-selected') == "false"){
+                    $(this).attr('data-is-selected',true);
+                    $(this).html('&#xe628;');
+                }else{
+                    $(this).attr('data-is-selected',false);
+                    $(this).html('&#xe61c;');
+                }
+            });
+
+       
+            $('#popup-product-import').on("click",".select-all-but",function(){
+                if($(this).attr('data-is-selected') == "false"){
+                    $(this).attr('data-is-selected',true);
+                    $(this).html('全不选');
+                    $('.select-but').attr('data-is-selected',true);
+                    $('.select-but').html('&#xe628;');
+                }else{
+                    $(this).attr('data-is-selected',false);
+                    $(this).html('全选');
+                    $('.select-but').attr('data-is-selected',false);
+                    $('.select-but').html('&#xe61c;');
+                }
+            });
+
+
+            $('#popup-product-import').on("click",".random-select-but",function(){
+                $('.select-all-but').html('全选');
+                $('.select-all-but').attr('data-is-selected',false);
+                $('.select-but').html('&#xe61c;');
+                $('.select-but').attr('data-is-selected',false);
+                for(var i=0; i<=30; i++){
+                    var index = parseInt(Math.random()*30);
+                    $('.select-but').eq(index).html('&#xe628;');
+                    $('.select-but').eq(index).attr('data-is-selected',true);
+                }
+            });
+
+
+               $('#popup-product-import').on("click",".shop-product-list-cate",function(){
+
+                   $.openPanel("#panel-shop-product-list-cate");
+
+               })
+
+            
+
+               $('#popup-product-import').on("click","#finish-add-goods-but",function(){
+                   var importPro = $.parseJSON(sessionStorage.getItem('select_product'));
+                   
+                   importPro = importPro != null ?importPro : {};
+                   var catid = $(this).attr('data-id');
+                   var productIds = '';
+                   var isSelect = false;
+                   var productlen = 0;
+                   $.each($('.select-but'),function(){
+                    if($(this).attr('data-is-selected') == 'true'){
+                        productIds += $(this).attr('data-cate-id')+',';
+                        isSelect = true;
+                        productlen++;
+                    }
+                    
+                   });
+                   if(isSelect){
+                    isSelect = false;
+                    productIds = productIds.substring(0,productIds.length-1);     
+                    $.toast('导入成功！');
+                    $(".page-current .badge_"+catid+"").html(productlen);
+                   }else{
+                    $.toast('至少选择一款商品！');
+                   }
+
+                   
+                   
+                   importPro[catid] = productIds;
+                   sessionStorage.setItem('select_product',JSON.stringify(importPro));
+                   
+
+               })
+            
+
+            //点击添加商品
+            $(page).on('click', '#open-shop', function() {
+                var product_info = sessionStorage.getItem('select_product');
+                product_info = JSON.parse(product_info);
+                //product_info = JSON.parse(product_info);
+                //var countItems = 0;
+                // $.each(product_info, function(i, item) {
+                //     countItems += item.length;
+                // })
+
+                // if (apply_shop_select_goods_limit > countItems) {
+                //     $.toast('您的店铺商品数量应不得低于' + apply_shop_select_goods_limit + '款');
+                //     return;
+                // }
+                var url = encodeURI(apiUrl + 'shop/index/addShopProduct');
+                $.ajax({
+                    url: url,
+                    async: false,
+                    type: 'POST',
+                    data: {
+                        product_info: product_info
+                    },
+                    headers: {
+                        "Token": sso_Token
+                    },
+                    success: function(result) {
+                        var data = $.parseJSON(result);
+                        if (data['code'] == 0) {
+                            $.toast('您已添加成功!');
+                        } else {
+                            $.toast('添加失败!');
+                            return false;
+                        }
+
+                    }
+                });
+            })
+        })
+
+
+    /**
+     * 返回产品栏目列表
+     */
+    function getPlatFormCate(){
+        //显示栏目列表
+        var proCount = 0;
+        var category = {};
+        var url = encodeURI(apiUrl + 'shop/index/getCate');
+        $.ajax({
+            url: url,
+            async: false,
+            type: 'GET',
+            data: {
+                module:'system',
+            },
+            headers: {
+                "Token": sso_Token
+            },
+            success: function(result) {
+                var data = $.parseJSON(result);
+                 category = data;
+            }
+        })
+        return category;
+    }
+    /**
+    * 载入产品
+    * @param {[offset]} number  分页数量
+    * @param {[pages]} number 页码
+    * @param {[order]} string 排序字段
+    * @param {[catid]} number 栏目id
+    */
+    function addItems(offset, pages, order, catid, siteid) {
+        var max = 0 ;
+        var order = order || 0;
+        var catid = catid || 0;
+        $.ajax({
+           type: "GET",
+           url: apiUrl,
+           async: false,
+           data: {m:'product',c:'index',a:'lists',page:pages,offset:offset,order:order,catid:catid,siteid:siteid,sysadd:1,is_up:99},
+           dataType: "json",
+           headers: {"Token":sso_Token},
+           success: function(result){
+              var data = result;
+              max = data['total'];
+              var list = data.data;
+              var html = '';
+              // var shop_import_goods_data = sessionStorage.getItem('shop_import_goods_data');
+              //     shop_import_goods_data = JSON.parse(shop_import_goods_data);
+              // var fromcatid = getRrlParam('fromcatid');
+              // var shop_import_goods_catid_data = shop_import_goods_data[fromcatid] || [];
+
+              $.each(list, function(i, item){
+                  var goodsid = item.id;
+                  var is_selected = 'false';
+                  var select_but_icon = '&#xe61c;';
+                  // if(in_array(goodsid,shop_import_goods_catid_data)){
+                  //   is_selected = 'true';
+                  //   select_but_icon = ('&#xe63e;');
+                  //   //console.log(goodsid);
+                  // }
+                  html += '<div class="pad10 bgfff borb1 bce6">';
+                  html += '<div class="fll select-but iconfont mar0 checked cCB1408" data-cate-id="'+item.id+'" data-is-selected="'+is_selected+'">'+select_but_icon+'</div>';
+                  html += '<div class="w80 fll">';
+                  html += '<a class="c666 external" href="#" data-id="'+item.id+'">';
+                  html += '<img class="w80 pos-r" style="top:50%;" src="'+item.thumb+'" alt=""></a>';
+                  html += '</div>';
+                  html += '<a class="c999 external" href="#" data-id="'+item.id+'">';
+                  html += '<div class="w60b fs06 fll padl10 padr0">';
+                  html += '<a class="c666 external" href="#" data-id="'+item.id+'">';
+                  html += '<div style="min-height:36px;">'+cutString(item.title,40)+'</div></a>';
+                  html += '<div class="c999"> 销量：'+item.sales+' </div>';
+                  html += '<div class="fs09 cfa6a0b"><span class="fs06">&yen;</span>'+item.sale_price+'</div>';
+                  html += '</div></a>';
+                  html += '<div class="w20b flr" style="padding-top:20px;"><a class="c666 external" href="#" data-id="'+item.id+'">';
+                  html += '</a></div>';
+                  html += '<div class="clear"></div>';
+                  html += '</div>';
+
+                  // html += '<li>';
+                  // html += '<div class="item-content">';
+                  // html += '<div class="item-inner">';
+                  // html += '<div class="select-but w10b h80 lh80 iconfont mar0 cCB1408" data-is-selected="false">&#xe642;</div>';
+                  // html += '<div class="w21b"><img src="'+item.thumb+'" class="w60 h60"></div>';
+                  // html += '<div class="w69b fs08">'+cutString(item.title,40)+'</div>';
+                  // html += '</div>';
+                  // html += '</div>';
+                  // html += '<i class="icon iconfont fs09  mar0">&#xe640;</i>';
+                  // html += '</li>';
+                });
+                //alert()
+              $('.popup-product-import .infinite-scroll .list-container').append(html);
+            }
+        });
+    return max;
+    }
+})

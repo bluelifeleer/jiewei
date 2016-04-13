@@ -1,0 +1,147 @@
+$(function(){
+	'use strict';
+	$(document).on('pageInit','#consume-records-detail',function(e,id,page){
+		//判断是否登录
+		var loginInfo = checkLogin();
+	    if (!loginInfo) {
+	      $.router.loadPage('login.html');
+	    }
+	    $.showIndicator();
+	    //获取当前页面要请求数据的类型
+	    var type = getRrlParam('type');
+
+	    // alert(type);
+
+	    var postType = 0;
+	    switch(type){
+	    	case 'frozen':
+	    		//冻结金额
+	    		postType = 2;
+	    	break;
+	    	case 'bonus':
+	    		//开店奖励
+	    		postType = 4;
+	    	break;
+	    	case 'sales':
+	    		//本店销售额
+	    		postType = 3;
+	    	break;
+	    	case 'all':
+	    		postType = 5;
+	    	break;
+	    	default :
+	    		//提现金额
+	    		postType = 1;
+	    	break;
+	    }
+
+
+	    //全部明细列表
+		var loading = false;
+		var pages = 1;
+		var offset = 12;
+		var max = showConsumeListes(offset, pages);
+		//$('#index-product').removeClass('disn');
+		
+		loading = max > offset?false:true;
+		if(loading){
+			// 加载完毕，则注销无限加载事件，以防不必要的加载
+			$.detachInfiniteScroll($('.infinite-scroll'));
+			// 删除加载提示符
+			//$('.infinite-scroll-preloader').remove();
+			$(".preloader_null").removeClass("disn");
+			$(".preloader").addClass("disn");
+		}
+
+		/**
+		 * 下拉列表
+		 * @param
+		 */
+		$(page).on('infinite',function() {
+			
+			 //如果正在加载，则退出
+			if (loading) return false;
+			loading = true;
+			var offset = 12;
+
+			var max = showConsumeListes(offset,pages);
+			if (max > (pages * offset)) {
+				 // 更新页码
+				 pages++
+				 // 添加新条目
+				 max = showConsumeListes(offset, pages);
+				 // 重置加载flag
+				 loading = false;
+				 // 容器发生改变,如果是js滚动，需要刷新滚动
+				 $.refreshScroller();
+			}else{
+				 // 加载完毕，则注销无限加载事件，以防不必要的加载
+				 $.detachInfiniteScroll($('.infinite-scroll'));
+				 // 删除加载提示符
+				 //$('.infinite-scroll-preloader').remove();
+				 $(".preloader_null").removeClass("disn");
+				 $(".preloader").addClass("disn");
+
+				 return false;
+			}
+		});
+
+
+		function showConsumeListes(offset,pages){
+			var total = 0;
+			var url = encodeURI(apiUrl+'account/index/consumeRecordsLists/type/'+postType);
+		   	$.ajax({
+		   		url : url,
+		   		type : 'GET',
+		   		async : false,
+		   		data:{
+		   			offset : offset,
+		   			pages : pages,
+		   		},
+		   		headers: {
+			    	"Token": sso_Token
+			    },
+		   		success :function(res){
+		   			var htmlStr = '';
+		   			res = JSON.parse(res);
+		   			total = res.data[1];
+		   			if(res.code == 0){
+		   				if(parseInt(res.data[1]) == 0){
+		   					htmlStr = '<li class="item-content borb1 bce6 padt5 padb5">暂无数据记录</li>';
+		   					$.hideIndicator();
+			   				$('#lists').html(htmlStr);
+		   				}else{
+
+			   				for(var i=0; i<res.data[0].length; i++){
+			   					var action = parseInt(res.data[0][i]['action']) == 1 ? '+' : '-';
+			   					
+			   					htmlStr += '<li class="item-content borb1 fs06 bce6 padt5 padb15">'+
+									'<div class="fll">'+
+										'<div>'+res.data[0][i]['create_time']+'</div>'+
+										'<div >'+res.data[0][i]['title']+'</div>'+
+									'</div>'+
+									'<div class="flr"  style="line-height:2rem;">'+
+										'<i class="flr icon iconfont mar0 fs08 cCB1408" style="margin:0 0.6rem 0 0.4rem">&#xe663;</i>'+
+										'<div class="flr">'+ action + res.data[0][i]['amount'] +'</div>'+
+									'</div>'+'<div class="clear"></div>'+
+								'</li>';
+			   				}
+
+			   				$.hideIndicator();
+			   				$('.list-container > ul').append(htmlStr);
+		   				}
+
+		   			}else{
+		   				$.hideIndicator();
+		   				$.toast('加载失败');
+		   			}
+		   		},
+		   		error:function(err){
+		   			$.hideIndicator();
+		   			$.toast(err);
+		   		}
+		   	});
+			return total;
+		} 	
+	});
+});

@@ -1,0 +1,43 @@
+$(document).on('pageInit','#shop-son-category-add',function(e, id, page){
+            var catid = getRrlParam('catid');
+            var count = 1;
+            //添加子栏目
+            $(page).on('click','#confirm-but',function(){
+                var catname = $('.add-create-categories').val();
+                if (!catname) {
+                    $.toast('请填写您的栏目名称!');
+                    return false;
+                }
+                var url = encodeURI(apiUrl + 'shop/index/addShopCate');
+                var arrparentid = '0,'+catid;
+                $.ajax({
+                    url: url,
+                    async: false,
+                    type: 'POST',
+                    data: {
+                        module: 'site',
+                        parentid: catid,
+                        catname: catname,
+                        child: 0,
+                        arrparentid: arrparentid,
+                    },
+                    headers: {
+                        "Token": sso_Token
+                    },
+                    success: function(result) {
+                        var data = $.parseJSON(result);
+                        if (data.code == 0) {
+                            $.toast('添加成功!');
+                            $.router.loadPage('shop_category_manage.html');
+                        } else {
+                            $.toast('添加失败!');
+                            return false;
+                        }
+
+                    }
+                });
+            })
+
+
+            
+        });

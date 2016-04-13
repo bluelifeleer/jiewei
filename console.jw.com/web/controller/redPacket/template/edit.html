@@ -1,0 +1,139 @@
+{V "system","header"}
+
+<body >
+	<section class="wrapper">
+		<div class="row">
+
+			<div class="col-lg-12">
+				<section class="panel  panel-info" style="border: 1px solid #ccc;">
+					<header class="panel-heading" style="padding: 10px;">
+						<span>创建现金红包</span>
+					</header>
+					<div class="panel-body"
+						style="padding: 10px; padding-bottom: 120px;">
+
+
+						<div class="toolbar" style="padding-bottom: 8px;">
+							<?php echo InitPHP::getService("admin")->menu($GLOBALS['_menuid']);?>
+						</div>
+
+						<form class="form-horizontal tasi-form" method="post"
+							enctype="multipart/form-data" action="">
+
+							<input type="hidden" class="_data" name="id" 	value="{$id}">
+							<input type="hidden" class="_data" name="type" 	value="{$type}">
+							<input type="hidden" 	class="_data" name="dosubmit" value="1">
+								<div class="form-group">
+                    <label class="col-sm-2  control-label" style="text-align: right;">红包编号：</label>
+										<div class="col-sm-4">
+											<input type="text" readonly="true" class="form-control" name="red_no" value="{$info['red_no']}" placeholder="例如：XS （新手红包）"   errormsg="最多4个字符">
+										</div>
+                </div>
+
+								<div class="form-group">
+                  <label class="col-sm-2 col-xs-4 control-label" style="text-align: right;" >红包名称：</label>
+                  <div class="col-sm-4 ">
+                      <input type="text" class="form-control" name="title" value="{$info['title']}" datatype="s2-80" errormsg="请输入2-80个字符">
+                  </div>
+              </div>
+
+							<div class="form-group">
+									<label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">使用限制：</label>
+									<div class="col-lg-3 col-sm-4 col-xs-4 " style="line-height:24px;">
+										{radio($useType,$info['usetype'] !=''? $info['usetype']:'','class="_data" name="usetype" ')}
+									</div>
+							</div>
+
+							<div class="form-group" id="numberid"  style="display:{php echo $type == 2?'black':'none'}">
+									 <label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">选择商品：</label>
+									 <div class="col-sm-4" >
+										 <input type="hidden" name="pro_id" id="pro_id" value="{$info['pro_id']}">
+										 <input type="text" name="productTitle" id="productTitle" class="form-control" value="{$title}" readonly datatype="{php echo $type == 2?'*1-100':''}" nullmsg="选择商品">
+									 </div>
+									 <div class="col-sm-1">
+										 <span class="input-group-btn">
+												<button class="btn btn-white" type="button" onclick="selectProduct()">选择商品</button>
+										 </span>
+									 </div>
+							 </div>
+
+								<div class="form-group" id="numberid"  style="display:{php echo $type == 1?'black':'none'}">
+										 <label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">面值：</label>
+										 <div class="col-sm-4" >
+												 <input type="text" class="form-control" name="mount" value="{$info['mount']}" placeholder="单位（元）格式：1.00" datatype="{php echo $type == 1?'s1-6':''}" errormsg="请输入1-6位金额">
+										 </div>
+								 </div>
+
+                <div class="form-group" id="numberid">
+                     <label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">类型：</label>
+                     <div class="col-sm-4" >
+                         <input type="text" class="form-control" name="type" readonly="true" value="{$typeArr[$info['type']]}" >
+                     </div>
+                 </div>
+                 <div class="form-group" id="numberid">
+                      <label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">使用状态 ：</label>
+                      <div class="col-sm-4" >
+                          <input type="text" class="form-control" name="status" readonly="true" value="{$statusArr[$info['status']]}" >
+                      </div>
+                  </div>
+
+								<div class="form-group">
+										<label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">截至时间</label>
+										<div class="col-sm-4">
+												<?php echo calendar('endtime', 'class="form-control _data" name="endtime" placeholder="点击输入框选择日期" datatype="*" color="#000000"',time_format($info['endtime']), 'FALSE', 'FALSE', 'false') ?>
+                    </div>
+										<div class="col-sm-4 col-xs-10"><span class="help-block"><i class="icon-info-circle"></i>点击输入框选择日期</span></div>
+								</div>
+
+								<div class="form-group">
+                    <label class="col-sm-2 col-xs-4 control-label" style="text-align: right;">备注（管理员可见）</label>
+                    <div class="col-sm-4 ">
+                        <textarea name="admin_note" class="form-control" datatype="*"  cols="60" rows="3">{$info['admin_note']}</textarea>
+                    </div>
+                </div>
+
+								<div class="form-group">
+                    <label class="col-sm-3  control-label"></label>
+                    <div class="col-sm-2">
+                        <input class="btn btn-info col-sm-12 col-xs-12" type="submit" name="submit" value="提交">
+                    </div>
+                </div>
+						</form>
+
+					</div>
+				</section>
+			</div>
+		</div>
+	</section>
+  <script type="text/javascript">
+  	$(function(){
+  			$(".form-horizontal").Validform({
+  					tiptype:1,
+  					postonce:true,
+  					beforeSubmit:function(curform){
+  					}
+  			});
+  	})
+
+
+		function selectProduct() {
+			 top.dialog({
+					 id: 'relation',
+					 fixed: true,
+					 width: 1000,
+					 height: 630,
+					 title: '选择商品',
+					 padding: 5,
+					 url: '/index.php?m=product&c=product&a=selectLists',
+					 onclose: function () {
+							 if (this.returnValue) {
+									 var text=this.returnValue;
+									 var htmls = text.split("~jw~");
+									 $("#pro_id").val(htmls[0]);
+									 $("#productTitle").val(htmls[1]);
+							 }
+					 }
+			 }).showModal(this);
+	 }
+  </script>
+</body>

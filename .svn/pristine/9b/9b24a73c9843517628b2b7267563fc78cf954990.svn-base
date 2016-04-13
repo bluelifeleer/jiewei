@@ -1,0 +1,64 @@
+$(function() {
+  'use strict';
+  $(document).on('pageInit', '#page-modify-password', function(e, id, page) {
+
+    var loginInfo = checkLogin('1');
+    if (!loginInfo) {
+      $.router.loadPage('login.html');
+    }
+
+
+    $(page).on('click', '#modify-pasd-but', function() {
+      $.showIndicator();
+      if (parseInt($('#new-pasd').val().length) <6 ||parseInt($('#confirm-pasd').val().length) < 6) {
+        $.hideIndicator();
+        $.toast('密码不能小于６位数');
+        return false;
+      } else if ($('#confirm-pasd').val() != $('#new-pasd').val()) {
+        $.hideIndicator();
+        $.toast('两次输入的密码不一致');
+        return false;
+      } else {
+        var newpasd = $('#new-pasd').val();
+        var confirmpasd = $('#confirm-pasd').val();
+        var url = encodeURI(apiUrl + 'account/index/modifyPassword');
+        var data = {
+          'new_pasd':newpasd,
+          "confirm_pasd": confirmpasd
+        };
+
+        $.ajax({
+          url: url,
+          async: false,
+          type: 'POST',
+          data: data,
+          headers: {
+            "Token": sso_Token
+          },
+          success: function(res) {
+            res = $.parseJSON(res);
+            if (res.code == 0) {
+              $.hideIndicator();
+              $.toast('密码修改成功');
+              //退出登录
+              loginOut();
+            } else if(res.code == 2) {
+              $.hideIndicator();
+              $.toast('两次输入密码不一至');
+            }else{
+              $.toast('密码修改失败');
+            }
+          },
+          error:function(err){
+            $.hideIndicator();
+            $.toast(err);
+
+          }
+
+        });
+
+      }
+    });
+  });
+  //
+});

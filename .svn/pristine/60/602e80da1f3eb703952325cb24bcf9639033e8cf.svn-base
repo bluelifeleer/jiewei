@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>云兆●云商城</title>
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+		<link rel="shortcut icon" href="/favicon.ico">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<link rel="stylesheet" href="/sources/css/sm.min.css"/>
+    <link rel="stylesheet" href="/sources/css/sm-extend.min.css"/>
+		<link rel="stylesheet" href="/sources/css/demos.css">
+		<link rel="stylesheet" href="/sources/css/add.css">
+	</head>
+	<body>
+		<!-- page 容器 -->
+		<div class="page" id="page-shipping-detail">
+			<!-- 标题栏 -->
+			<header class="bar bar-nav">
+				<h1 class="title">订单详情</h1>
+				<a class="pull-left back " href="order.html">
+					<i class="icon iconfont mar0 fs13 white">&#xe61b;</i>
+				</a>
+			</header>
+			<!-- 工具栏 -->
+			<nav class="bar bar-tab">
+				<span class="toools-bar-but tab-item external" style="cursor:pointer;" id="shop-index" data-but-type="index">
+					<i class="icon iconfont">&#xe640;</i>
+					<span class="tab-label">首页</span>
+				</span>
+				<span class="toools-bar-but tab-item" style="cursor:pointer;">
+					<i class="icon iconfont">&#xe684;</i>
+					<span class="tab-label">云兆云商</span>
+				</span>
+				<span class="toools-bar-but tab-item" data-but-type="cart" style="cursor:pointer;">
+					<i class="icon iconfont">&#xe62e;</i>
+					<span class="tab-label">购物车</span>
+				</span>
+				<span class="toools-bar-but tab-item active" data-but-type="order" style="cursor:pointer;">
+					<i class="icon iconfont">&#xe661;</i>
+					<span class="tab-label">订单</span>
+				</span>
+				<span class="toools-bar-but tab-item " data-but-type="member" style="cursor:pointer;">
+					<i class="icon iconfont">&#xe65e;</i>
+					<span class="tab-label">我的</span>
+				</span>
+			</nav>
+			<div class="content" id="order-infomartion-block">
+				<!--div class="list-block marb10 pad10 bgfff borb1 bce6 fs06">
+					<div class="cfa6a0b fs08">交易成功</div>
+					<div>订单号：18273648493874</div>
+					<div>支付方式：支付宝</div>
+					<div>交易号：1748464334345345345345345</div>
+					<div>创建时间：2015-12-11 14:46:38</div>
+					<div>付款时间：2015-12-11 14:50:38</div>
+					<div>发货时间：2015-12-11 13:23:38</div>
+					<div>成交时间：2015-12-14 9:30:38</div>
+				</div>
+				<div class="list-block marb10 pad10 bgfff bort1 borb1 bce6 fs06">
+					<div class="c666">
+						<div>
+							<div class="fll">收货人：胡文婷</div>
+							<div class="flr">13948576857</div>
+							<div class="clear"></div>
+						</div>
+						<div>收货地址：浙江省 温州市 鹿城区 五马街道 谢池巷117号 开太大厦26f</div>
+					</div>
+				</div>
+				<div class="card mar0 marb10 pad10">
+					<div class="mart5 fs06">
+						<div class="fs08 marb10">洁柔旗舰店</div>
+						<a class="c666 " href="goods.html">
+							<div class="bgf4 marb10">
+								<div class="w30bb fll pad10">
+									<img class="w100b" src="/sources/images/goods3.jpg" alt="">
+								</div>
+								<div class="w50b fll padt10 padb10">洁柔Face黑面子高品质 卷筒纸 卫生纸180g/卷*23卷</div>
+								<div class="w20b flr txar pad10">
+									<div>￥49.90</div>
+									<div class="c999">x<span>1</span></div>
+								</div>
+								<div class="clear"></div>
+							</div>
+						</a>
+						<a class="c666 " href="goods.html">
+							<div class="bgf4 marb10">
+								<div class="w30bb fll pad10">
+									<img class="w100b" src="/sources/images/goods3.jpg" alt="">
+								</div>
+								<div class="w50b fll padt10 padb10">洁柔Face黑面子高品质 卷筒纸 卫生纸180g/卷*23卷</div>
+								<div class="w20b flr txar pad10">
+									<div>￥49.90</div>
+									<div class="c999">x<span>1</span></div>
+								</div>
+								<div class="clear"></div>
+							</div>
+						</a>
+					</div>
+					<div class="txar fs06 borb1 bce6 padb10">
+						共<span>2</span>件商品 合计：￥<span>96.80</span> (含运费￥<span>0.00</span>)
+					</div>
+					<div class="padt10 padr10 padl10">
+						<a class="flr bor1 bce6 txac borrad5 marl10 padl10 padr10 c666 " href="">删除订单</a>
+						<a class="flr bor1 bce6 txac borrad5 marl10 padl10 padr10 c666 " href="">申请售后</a>
+						<div class="clear"></div>
+					</div>
+				</div-->
+			</div>
+		</div>
+	</body>
+<script type="text/javascript" src="/sources/js/zepto-full.1.1.6.min.js"></script>
+<script type="text/javascript" src="/sources/js/sm.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/sm-extend.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/module/public.js"></script>
+<script type="text/javascript" src="/sources/js/module/jweixin-1.0.0.js"></script>
+<script type="text/javascript" src="/sources/js/webuploader.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.all.js"> </script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+<script type='text/javascript' data-main="/sources/js/app.js" src='/sources/js/require.js' charset='utf-8'></script>
+</html>

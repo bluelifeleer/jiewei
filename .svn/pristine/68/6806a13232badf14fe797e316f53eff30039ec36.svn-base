@@ -1,0 +1,72 @@
+<?php
+/**
+ * 财务管理
+ * --提现记录
+ * @Author: 邵博
+ * @Date:   2016-01-11 00:59:45
+ * @Last Modified time: 2016-03-28 21:21:24
+ */
+class presentController extends Controller
+{
+    private $db;
+    //Action白名单
+    public $initphp_list = array(
+        'init', //
+        'confirm_success', //
+    );
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->userid = $userid = (int) $this->getUtil('session')->get('admin_userid');
+        if ($userid) {
+            $this->memberinfo = InitPHP::getRemoteService('admin', 'get', array($userid));
+        }
+        //判断是否登入状态
+        InitPHP::getService("admin")->check_admin();
+    }
+    /**
+     * 提现列表
+     */
+    public function init()
+    {
+        $where = '';
+        $page   = (int) $_GET['page'];
+        $offset = 100;
+
+        $limit = $page * $offset;
+        $data  = InitPHP::getRemoteService('presentManner', 'lists', array($where,$offset,$limit));
+        $info  = $data[0];
+        $total = $data[1];
+        $is_success = array('1'=>'申请中','2'=>'已提现');
+        $pages = pages($total, $page, $offset);
+        include V('pay', 'present_manner_init');
+    }
+    /**
+     * [回款操作]
+     * @return [type] [description]
+     */
+    public function confirm_success()
+    {
+        $id = trim($_POST['id']);
+        $where['is_success'] = 2;
+        $where['payment_time'] = time();
+        // var_dump($where);die();
+        $success = InitPHP::getRemoteService('presentManner', 'update', array($where,$id));
+        if($success){
+            echo jsonEncode(array(
+                'code' => 200,
+                'info' => '操作成功',
+            ));
+            exit();
+        }else{
+            echo jsonEncode(array(
+                'code' => 300,
+                'info' => '操作失败',
+            ));
+            exit();
+        }
+        //var_dump($ordergoodinfo);
+    }
+
+}

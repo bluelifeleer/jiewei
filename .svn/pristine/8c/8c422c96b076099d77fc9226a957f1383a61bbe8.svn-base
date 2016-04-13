@@ -1,0 +1,500 @@
+/*
+ * @Author: seaven
+ * @Date:   2016-03-02 21:35:07
+ * @Last Modified by:   anchen
+ * @Last Modified time: 2016-03-17 10:42:33
+ */
+$(function() {
+  'use strict';
+
+  //获取全部订单
+   $(document).on('pageInit', '#page-shop-order-manage', function(e, id, page) {
+
+
+   	//判断是否登录
+    var user = checkLogin('1');
+    if(!user){
+      $.router.loadPage('login.html');
+      return false;
+    }
+    //获取订单类型
+    var orderType = getRrlParam('order_type');
+
+    orderType = orderType || '';
+
+    if (orderType && orderType !== '') {
+      $('.page-current .order-page-bf').css({
+        'border-color': '#fff',
+        'color': '#3d4145'
+      });
+      $('.page-current .order-page-bf').eq(parseInt(orderType)).css({
+        'border-color': '#fa6a0b',
+        'color': '#fa6a0b'
+      });
+    } else {
+      $('.page-current .order-page-bf').css({
+        'border-color': '#fff',
+        'color': '#3d4145'
+      });
+      $('.page-current .order-page-bf').eq(0).css({
+        'border-color': '#fa6a0b',
+        'color': '#fa6a0b'
+      });
+    }
+    //加载数据
+    loadData();
+
+    /**
+     * [loadData 异步加载数据]
+     * @return {[type]} [description]
+     */
+    function loadData() {
+
+    	var url = encodeURI(apiUrl + 'shop/shopOrder/ShoporderLists/num/5/offset/0/order_type/' + orderType);
+
+    	$.ajax({
+    	  url: url,
+    	  async: false,
+    	  type: 'GET',
+    	  headers: {
+    	    "Token": sso_Token
+    	  },
+    	  success: function(lists) {
+    	    lists = JSON.parse(lists);
+    	    if (lists['code'] == 0) {
+    	      if (lists['data'] && lists['data'] != 'null') {
+    	        var orderHtml = '';
+                //console.log(lists['data']);
+    	        for (var i = 0; i < lists['data'].length; i++) {
+    	          //var data = JSON.parse(lists['data'][i]);
+    	          var orderGoods = '';
+    	          var isSuccess = '';
+    	          var operation = '';
+    	          switch (parseInt(lists['data'][i]['order_status'])) {
+    	            case 2:
+    	              isSuccess = '等待发货';
+    	              operation =  '<a class="flr bor1 bce6 txac borrad5 marl10 padl10 padt4 padb4 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                for (var j = 0; j < lists['data'][i]['goods'][0][0].length; j++) {
+    	                  var goodsAttrJson = JSON.parse(lists['data'][i]['goods'][0][0][j]['goods_attr']);
+    	                  var goodsAttrStr = '';
+    	                  var k = '';
+    	                  for(k in goodsAttrJson){
+    	                    goodsAttrStr += k + ':' + goodsAttrJson[k];
+    	                  }
+                          var goods_status = lists['data'][i]['goods'][0][0][j]['goods_status'];
+                          var from_id = lists['data'][i]['goods'][0][0][j]['from_id'];
+                          console.log(from_id);
+    	                  orderGoods += '<a href="product.html?id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '" class="external c666">' +
+    	                    '<div class="bgf4 marb10 h100">' +
+    	                    '<div class="w28b fll pad4 h100">' +
+    	                    '<img class="block w80 h80" src="' + lists['data'][i]['goods'][0][0][j]['goods_pic'] + '" alt="' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '">' +
+    	                    '</div>' +
+    	                    '<div class="w40b h100 fll padt10 padb10">'+
+    	                        '<div class="w100b">' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '</div>'+
+    	                        '<div class="w100b">' + goodsAttrStr + '</div>'+
+    	                    '</div>' +
+    	                    '<div class="w28b h100 fll txar pad10">' +
+    	                    '<div>￥' + lists['data'][i]['goods'][0][0][j]['goods_price'] + '</div>' +
+    	                    '<div class="c999">x<span>' + lists['data'][i]['goods'][0][0][j]['goods_number'] + '</span></div>' ;
+
+                            if(goods_status == 2 && from_id != 1){
+                                orderGoods +='<a class="flr  bor1 bce6 txac  borrad5 mart10 marl10 padt4 padb4 padl10 padr10 c666 fs06"  href="delivery.html?order_id='+ lists['data'][i]['order_id'] +'&pro_id='+lists['data'][i]['goods'][0][0][j]['goods_id']+'">发货</a>';
+                            }else{
+                                orderGoods +='<span class="block flr w60 bor1 bce6 txac borrad5 c666 fs06">平台发货</span>';
+                            }
+                            
+    	                    orderGoods +='<div class=""></div>'+
+    	                    '</div>' +
+    	                    '<div class="clear"></div>' +
+    	                    '</div>' +
+    	                    '</a>';
+    	                }
+    	              break;
+    	            case 3:
+    	              isSuccess = '等待确认收货';
+    	              operation = '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                for (var j = 0; j < lists['data'][i]['goods'][0][0].length; j++) {
+    	                  var goodsAttrJson = JSON.parse(lists['data'][i]['goods'][0][0][j]['goods_attr']);
+    	                  var goodsAttrStr = '';
+    	                  var k = '';
+    	                  for(k in goodsAttrJson){
+    	                    goodsAttrStr += k + ':' + goodsAttrJson[k];
+    	                  }
+    	                  orderGoods += '<a href="product.html?id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '" class="c666">' +
+    	                    '<div class="bgf4 marb10 h100">' +
+    	                    '<div class="w28b fll pad4 h100">' +
+    	                    '<img class="block w80 h80" src="' + lists['data'][i]['goods'][0][0][j]['goods_pic'] + '" alt="' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '">' +
+    	                    '</div>' +
+    	                    '<div class="w40b h100 fll padt10 padb10">'+
+    	                        '<div class="w100b">' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '</div>'+
+    	                        '<div class="w100b">' + goodsAttrStr + '</div>'+
+    	                    '</div>' +
+    	                    '<div class="w28b h100 fll txar pad10">' +
+    	                    '<div>￥' + lists['data'][i]['goods'][0][0][j]['goods_price'] + '</div>' +
+    	                    '<div class="c999">x<span>' + lists['data'][i]['goods'][0][0][j]['goods_number'] + '</span></div>' +
+    	                    '<div class=""></div>'+
+    	                    '</div>' +
+    	                    '<div class="clear"></div>' +
+    	                    '</div>' +
+    	                    '</a>';
+    	                }
+    	              break;
+    	            case 4:
+    	              isSuccess = '未评价';
+    	              operation = '<!--a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="assess.html?order_id=' + lists['data'][i]['order_id'] + '">我要评价</a-->' +
+    	                '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                for (var j = 0; j < lists['data'][i]['goods'][0][0].length; j++) {
+    	                  var goodsAttrJson = JSON.parse(lists['data'][i]['goods'][0][0][j]['goods_attr']);
+    	                  var goodsAttrStr = '';
+    	                  var k = '';
+    	                  var orderGoodsStatusHtml = '';
+    	                  for(k in goodsAttrJson){
+    	                    goodsAttrStr += k + ':' + goodsAttrJson[k];
+    	                  }
+    	                  //判断商品当前状态
+    	                  if(parseInt(lists['data'][i]['goods'][0][0][j]['goods_status'])){
+    	                    orderGoodsStatusHtml = '<!--a class="block w100b h20 lh20 cCB1408 padt4 padb4 fs06" href="assess.html?goods_id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '&order_id=' + lists['data'][i]['order_id'] + '">我要评价</a-->'+
+    	                      '<span class="block w100b h20 lh20 cCB1408">售后中</span>';             
+    	                  }else{
+    	                    orderGoodsStatusHtml = '<a class="block w100b h20 lh20 cCB1408 padt4 padb4 fs06" href="assess.html?goods_id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '&order_id=' + lists['data'][i]['order_id'] + '">我要评价</a>'+
+    	                      '<a class="block w100b h20 lh20 cCB1408 padt4 padb4" href="after_sales.html?goods_id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '&order_id=' + lists['data'][i]['order_id'] + '&shop_id='+ lists['data'][i]['from_shopid'] +'">申请售后</a>';
+    	                  }
+    	                  orderGoods += '<a href="product.html?id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '" class="c666">' +
+    	                    '<div class="bgf4 marb10 h100">' +
+    	                    '<div class="w28b fll pad4 h100">' +
+    	                    '<img class="block w80 h80" src="' + lists['data'][i]['goods'][0][0][j]['goods_pic'] + '" alt="' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '">' +
+    	                    '</div>' +
+    	                    '<div class="w40b h100 fll padt10 padb10">'+
+    	                        '<div class="w100b">' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '</div>'+
+    	                        '<div class="w100b">' + goodsAttrStr + '</div>'+
+    	                    '</div>' +
+    	                    '<div class="w28b h100 fll txar pad10">' +
+    	                    '<div>￥' + lists['data'][i]['goods'][0][0][j]['goods_price'] + '</div>' +
+    	                    '<div class="c999">x<span>' + lists['data'][i]['goods'][0][0][j]['goods_number'] + '</span></div>' +
+    	                    '<div class="mart8">'+ orderGoodsStatusHtml +'</div>'+
+    	                    '</div>' +
+    	                    '<div class="clear"></div>' +
+    	                    '</div>' +
+    	                    '</a>';
+    	                }
+    	              break;
+    	            case 5:
+    	              isSuccess = '售后中';
+    	              operation = '<!--<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="">联系客服</a-->' +
+    	                '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                for (var j = 0; j < lists['data'][i]['goods'][0][0].length; j++) {
+    	                  var goodsAttrJson = JSON.parse(lists['data'][i]['goods'][0][0][j]['goods_attr']);
+    	                  var goodsAttrStr = '';
+    	                  var k = '';
+    	                  for(k in goodsAttrJson){
+    	                    goodsAttrStr += k + ':' + goodsAttrJson[k];
+    	                  }
+    	                  orderGoods += '<a href="product.html?id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '" class="c666">' +
+    	                    '<div class="bgf4 marb10 h100">' +
+    	                    '<div class="w28b fll pad4 h100">' +
+    	                    '<img class="block w80 h80" src="' + lists['data'][i]['goods'][0][0][j]['goods_pic'] + '" alt="' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '">' +
+    	                    '</div>' +
+    	                    '<div class="w40b h100 fll padt10 padb10">'+
+    	                        '<div class="w100b">' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '</div>'+
+    	                        '<div class="w100b">' + goodsAttrStr + '</div>'+
+    	                    '</div>' +
+    	                    '<div class="w28b h100 fll txar pad10">' +
+    	                    '<div>￥' + lists['data'][i]['goods'][0][0][j]['goods_price'] + '</div>' +
+    	                    '<div class="c999">x<span>' + lists['data'][i]['goods'][0][0][j]['goods_number'] + '</span></div>' +
+    	                    '<div class=""></div>'+
+    	                    '</div>' +
+    	                    '<div class="clear"></div>' +
+    	                    '</div>' +
+    	                    '</a>';
+    	                }
+    	              break;
+    	            case 99:
+    	              isSuccess = '交易成功';
+    	              operation = '<a class="operation-buts external flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="javascript:void(0);" data-but-fn="delete-order" data-order-id="' + lists['data'][i]['order_id'] + '">删除订单</a>' +
+    	                '<!--a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666" href="">申请售后</a-->' +
+    	                '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                for (var j = 0; j < lists['data'][i]['goods'][0][0].length; j++) {
+    	                  var goodsAttrJson = JSON.parse(lists['data'][i]['goods'][0][0][j]['goods_attr']);
+    	                  var goodsAttrStr = '';
+    	                  var k = '';
+    	                  for(k in goodsAttrJson){
+    	                    goodsAttrStr += k + ':' + goodsAttrJson[k];
+    	                  }
+    	                  orderGoods += '<a href="product.html?id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '" class="c666">' +
+    	                    '<div class="bgf4 marb10 h100">' +
+    	                    '<div class="w28b fll pad4 h100">' +
+    	                    '<img class="block w80 h80" src="' + lists['data'][i]['goods'][0][0][j]['goods_pic'] + '" alt="' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '">' +
+    	                    '</div>' +
+    	                    '<div class="w40b h100 fll padt10 padb10">'+
+    	                        '<div class="w100b">' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '</div>'+
+    	                        '<div class="w100b">' + goodsAttrStr + '</div>'+
+    	                    '</div>' +
+    	                    '<div class="w28b h100 fll txar pad10">' +
+    	                    '<div>￥' + lists['data'][i]['goods'][0][0][j]['goods_price'] + '</div>' +
+    	                    '<div class="c999">x<span>' + lists['data'][i]['goods'][0][0][j]['goods_number'] + '</span></div>' +
+    	                    '<div class=""></div>'+
+    	                    '</div>' +
+    	                    '<div class="clear"></div>' +
+    	                    '</div>' +
+    	                    '</a>';
+    	                }
+    	              break;
+    	            default:
+    	                if(parseInt(lists['data'][i]['is_cancel']) == 1){
+    	                  operation = '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 external fs06" href="javascript:void(0);">订单已关闭</a>' +
+    	                '<a class="operation-buts flr bor1 bce6 borrad5 external txac borrad3 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="javascript:void(0);" data-but-fn="delete-order" data-order-id="' + lists['data'][i]['order_id'] + '">删除订单</a>' +
+    	                '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                }else{
+    	                  operation = '<a class="operation-buts flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 external fs06" href="javascript:void(0);" data-but-fn="canael-order" data-order-id="' + lists['data'][i]['order_id'] + '">取消订单</a>' +
+    	                '<a class="flr borrad5 txac borrad3 marl10 padt4 padb4 padl10 padr10 white bgCB1408 fs06" href="trade_pay.html?order_id=' + lists['data'][i]['order_id'] + '">立即付款</a>' +
+    	                '<a class="flr bor1 bce6 txac borrad5 marl10 padt4 padb4 padl10 padr10 c666 fs06" href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">查看订单详情</a>';
+    	                }
+    	                isSuccess = '未付款';
+    	                for (var j = 0; j < lists['data'][i]['goods'][0][0].length; j++) {
+    	                  var goodsAttrJson = JSON.parse(lists['data'][i]['goods'][0][0][j]['goods_attr']);
+    	                  var goodsAttrStr = '';
+    	                  var k = '';
+    	                  for(k in goodsAttrJson){
+    	                    goodsAttrStr += k + ':' + goodsAttrJson[k];
+    	                  }
+    	                  orderGoods += '<a href="product.html?id=' + lists['data'][i]['goods'][0][0][j]['goods_id'] + '" class="external c666">' +
+    	                    '<div class="bgf4 marb10 h100">' +
+    	                    '<div class="w28b fll pad4 h100">' +
+    	                    '<img class="block w80 h80" src="' + lists['data'][i]['goods'][0][0][j]['goods_pic'] + '" alt="' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '">' +
+    	                    '</div>' +
+    	                    '<div class="w40b h100 fll padt10 padb10">'+
+    	                        '<div class="w100b">' + lists['data'][i]['goods'][0][0][j]['goods_name'] + '</div>'+
+    	                        '<div class="w100b">' + goodsAttrStr + '</div>'+
+    	                    '</div>' +
+    	                    '<div class="w28b h100 fll txar pad10">' +
+    	                    '<div>￥' + lists['data'][i]['goods'][0][0][j]['goods_price'] + '</div>' +
+    	                    '<div class="c999">x<span>' + lists['data'][i]['goods'][0][0][j]['goods_number'] + '</span></div>' +
+    	                    '<div class=""></div>'+
+    	                    '</div>' +
+    	                    '<div class="clear"></div>' +
+    	                    '</div>' +
+    	                    '</a>';
+    	                }
+    	              break;
+    	          }
+
+    	          orderHtml += '<div class="card mar0 marb10 pad10">' +
+    	            '<a class="c666 " href="shop_Order_Info.html?order_id=' + lists['data'][i]['order_id'] + '">' +
+    	            '<div>' +
+    	            '<div>' +
+    	            '<div class="fll">订单号：' + lists['data'][i]['order_id'] + '</div>' +
+    	            '<div class="flr cfa6a0b">' + isSuccess + '</div>' +
+    	            '<div class="clear"></div>' +
+    	            '</div>' +
+    	            '<div class="mart5 fs06">' + orderGoods + '</div>' +
+    	            '</div>' +
+    	            '<div class="txar fs06 borb1 bce6 padb10">' +
+    	            '共<span>' + lists['data'][i]['order_num'] + '</span>件商品 合计：￥<span>' + lists['data'][i]['order_amount'] + '</span> (含运费￥<span>0.00</span>)' +
+    	            '</div>' +
+    	            '</a>' +
+    	            '<div class="padt10 padr10 padl10">' + operation + '<div class="clear"></div>' +
+    	            '</div>' +
+    	            '</div>';
+    	        }
+    	        $('.page-current #all-order-list-block').html(orderHtml);
+
+    	        //判断加载的数据列表的高度是否大于设备窗口的高度，如果大于高度则显示加载提示器
+    	        var orderListBoxH = $('.page-current #all-order-list-block').height();
+    	        var srceenH = $(window).height();
+    	        if(orderListBoxH > srceenH){
+    	          $('.page-current .infinite-scroll-preloader').css('display','block');
+    	        }else{
+    	          $('.page-current .infinite-scroll-preloader').css('display','none');
+    	        }
+
+
+    	      } else {
+    	        $.toast('暂无所查订单');
+    	        // 加载完毕，则注销无限加载事件，以防不必要的加载
+    	        $.detachInfiniteScroll($('.pull-to-refresh-content'));
+    	        // 删除加载提示符
+    	        $('.page-current .infinite-scroll-preloader').remove();
+    	        return false;
+    	      }
+    	    } else {
+    	      $.toast('数据加载失败，下拉重新加载');
+    	    }
+    	  }
+
+    	});
+
+    }
+
+ /**========================================================================================================================================================**/
+
+        /**
+         * 下拉重新加载
+         */
+        $(document).on('refresh', '.pull-to-refresh-content', function(e) {
+          loadData();
+          // 重置下拉刷新事件
+          $.pullToRefreshDone('.pull-to-refresh-content');
+        });
+
+ /**========================================================================================================================================================**/
+
+            orderScrollLoadData(5, apiUrl, '#all-order-list-block');
+            //滚动加载事件
+            function orderScrollLoadData(num, api, listsBlock) {
+              var isLoading = false;
+              var index = 1;
+              var num = num || 20;
+              var offset = 0;
+              var api = api || 'http://api.zj3w.net/';
+              var temp = '';
+              $(document).on('infinite', '.infinite-scroll', function() {
+                if (isLoading) {
+                  return false;
+                }
+                isLoading = true;
+                index++;
+                offset = index * num;
+                var url = encodeURI(api + 'order/index/orderLists/num/' + num + '/offset/' + offset + '/order_type/' + orderType);
+
+                $.ajax({
+                  url: url,
+                  async: false,
+                  type: 'GET',
+                  headers: {
+                    "Token": sso_Token
+                  },
+                  success: function(lists) {
+                    lists = JSON.parse(lists);
+                    if (lists['code'] == 0) {
+                      if (lists['data'] && lists['data'] != 'null') { //有数据
+                        for (var i = 0; i < lists['data'].length; i++) {
+                          //
+                        }
+                        var oldData = $(listsBlock).html();
+                        $(listsBlock).html(oldData + temp);
+                        isLoading = false;
+                      } else { //没有数据
+                        $.toast('暂无所查订单');
+                        // 加载完毕，则注销无限加载事件，以防不必要的加载
+                        $.detachInfiniteScroll($('.pull-to-refresh-content'));
+                        // 删除加载提示符
+                        $('.infinite-scroll-preloader').remove();
+                        return false;
+                      }
+                    } else { //数据加载失败
+                      $.toast('请求失败，下拉重新加载');
+                      isLoading = false;
+                    }
+                  }
+
+                });
+
+              });
+            }
+
+ /**========================================================================================================================================================**/
+     /**
+      * 订单操作
+      * @author seaven
+      * @date 2016-03-02
+      */
+     orderOperation();
+     function orderOperation(){
+       $(page).on('click','.operation-buts',function(){
+         $.showIndicator();
+         var order_id = $(this).attr('data-order-id');
+         switch($(this).attr('data-but-fn')){
+           case 'delete-order'://删除订单
+             var url = encodeURI(apiUrl+'order/index/deleteOrder/order_id/'+order_id);
+             $.ajax({
+               url : url,
+               type : 'GET',
+               async : false,
+               headers : {
+                 "Token" : sso_Token
+               },
+               success : function(res){
+                 $.hideIndicator();
+                 res = JSON.parse(res);
+                 if(res.code == 0){
+                   $.hideIndicator();
+                   $.toast('删除成功');
+                   //重新加载页面
+                   $.reouter.loadPage('');
+                 }else{
+                   $.hideIndicator();
+                   $.toast('操作失败，请稍后再试');
+                 }
+               },
+               error : function(err){
+                 $.hideIndicator();
+                 $.toast(err);
+               }
+             });
+           break;
+           case 'canael-order'://取消订单
+             var url = encodeURI(apiUrl+'order/index/cancelOrder/order_id/'+order_id);
+             // console.log(url);
+             $.ajax({
+               url:url,
+               type:'GET',
+               async:false,
+               headers:{
+                 "Token": sso_Token
+               },
+               success:function(res){
+                 res = JSON.parse(res);
+                 if(res.code == 0){
+                   $.hideIndicator();
+                   $.toast('订单已撤销');
+                   //重新加载页面
+                   $.reouter.loadPage('');
+                 }else{
+                   $.hideIndicator();
+                   $.toast('操作失败，请稍后再试');
+                 }
+               },
+               error:function(err){
+                 $.hideIndicator();
+                 $.toast(err);
+               }
+             });
+           break;
+           default://确认收货
+             var url = encodeURI(apiUrl+"order/index/confirmReceipt/order_id/"+order_id);
+             // console.log(order_id);
+             $.ajax({
+               url: url,
+               async: false,
+               type: 'GET',
+               headers: {
+                 "Token": sso_Token
+               },
+               success : function(res){
+                 $.hideIndicator();
+                 res = JSON.parse(res);
+                 if(res.code == 0){
+                   $.toast('您的订单已确认收货');
+                   $.router.loadPage('order.html?order_type=4');
+                 }else{
+                   $.toast('订单确认收货失败');
+                 }
+               },
+               error : function(err){
+                 $.hideIndicator();
+                 $.toast(err);
+               }
+             });
+           break;
+         }
+       });
+     }
+
+     
+/**========================================================================================================================================================**/
+
+
+/**====================================================================================================================================================================================**/
+
+   });
+ });

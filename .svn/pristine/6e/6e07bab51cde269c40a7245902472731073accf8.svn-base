@@ -1,0 +1,214 @@
+$(function() {
+  'use strict';
+  $(document).on('pageInit', '#page-letter-box', function(e, id, page) {
+    //判断是否登录
+    var user = checkLogin('1');
+
+    if(!user){
+      $.router.loadPage('login.php');
+    }
+
+    loadingData();
+
+
+    /**
+     * 加载数据
+     * @author 李鹏
+     * @date 2016-03-02
+     */
+    function loadingData() {
+      var url = encodeURI(apiUrl + 'message/index/lists');
+
+
+      $.ajax({
+        url: url,
+        async: false,
+        type: 'GET',
+        headers: {
+          "Token": sso_Token
+        },
+        success: function(list) {
+          list = $.parseJSON(list);
+          if (list['code'] == 0) {
+            var msgHtml = '';
+            for (var i = 0; i < list['data'].length; i++) {
+              var iconElem = '';
+              switch (parseInt(list['data'][i]['type'])) {
+                case 2:
+                  iconElem = '<span class="block w60 h60 iconfont fs08 c0894EC mar0 lh60 txac">&#xe64e;</span>';
+                  break;
+                case 3:
+                  iconElem = '<img src="/sources/images/tu4036_8.jpg" class="w60 h60 borrad6" />';
+                  break;
+                default:
+                  iconElem = '<span class="block w60 h60 iconfont fs08 c0894EC mar0 lh60 txac">&#xe646;</span>';
+                  break;
+              }
+              msgHtml += '<li class="msg-lists-block w100b mart10" style="border-bottom:1px dashed #c1c1c1" data-msg-type="'+list['data'][i]['type']+'">' +
+                '<div class="fll w15b">' + iconElem + '</div>' +
+                '<div class="fll w70b">' +
+                  '<div class="item-title-row">' +
+                    '<div class="item-title fs06">' + list['data'][i]['title'] + '</div>' +
+                    '<div class="item-after fs06">'+ list['data'][i]['create_time'] +'</div>' +
+                  '</div>' +
+                  '<div class="item-text fs06">' + list['data'][i]['contents'] + '</div>' +
+                  '</div>' +
+                '<div class="fll w10b"><span class="block iconfont fs08 mar0 marl10 marr20 h60 lh60">&#xe600;</span></div>' +
+                '<div class="clear"></div>'
+                '</li>';
+            }
+            var originalHtml = $('#msg-lists-block').html();
+            $('#msg-lists-block').html(originalHtml+msgHtml);
+            if(parseInt($('#msg-lists-block').height()) < screenH){
+              $('.infinite-scroll-preloader').css('display','none');
+            }
+            // 加载完毕需要重置
+            $.pullToRefreshDone('.pull-to-refresh-content');
+          } else {
+            $.toast('拉取信息失败，下拉刷新');
+            $('.infinite-scroll-preloader').css('display','none');
+            // 加载完毕需要重置
+            $.pullToRefreshDone('.pull-to-refresh-content');
+          }
+
+        },
+        error:function(err){
+          $.toast(err);
+          $('.infinite-scroll-preloader').css('display','none');
+          // 加载完毕需要重置
+          $.pullToRefreshDone('.pull-to-refresh-content');
+        }
+      });
+    }
+
+
+    /**
+     * 下拉重新加载
+     * @author 李鹏
+     * @data 2016-03-02
+     */
+    $(document).on('refresh', '.pull-to-refresh-content', function(e) {
+      $('#msg-list-block').html('');
+      loadingData();
+    });
+
+
+
+
+
+
+    infiniteLoadContent();
+    /**
+     * 无限加载数据
+     * @return {[type]} [description]
+     */
+    function infiniteLoadContent(){
+      //计数器，记录当前请求的次数
+      var index = 1;
+      //每次请求的数据量
+      var num = 10;
+      //数据偏移量
+      var offset = 0;
+      //是否正在加载数据
+      var isLoading = false;
+      //是否还有数据可以加载
+      var isHasData = true;
+
+      $(document).on('infinite', '.pull-to-refresh-content', function() {
+
+        if (isHasData) {
+          if (isLoading) {
+            return false;
+          }
+
+          isLoading = true;
+          index++;
+          offset = parseInt(index * num);
+          var url = encodeURI(apiUrl + 'message/index/lists/offset/' + offset + '/num/' + num);
+
+
+          $.ajax({
+            url: url,
+            async: false,
+            type: 'GET',
+            headers: {
+              "Token": sso_Token
+            },
+            success: function(res) {
+              res = JSON.parse(res);
+              if (res['code'] == 0) {
+                if (res['data'].length) {
+                  var msgHtml = '';
+                  for (var i = 0; i < res['data'].length; i++) {
+                    var iconElem = '';
+                    switch (parseInt(res['data'][i]['type'])) {
+                      case 2:
+                        iconElem = '<span class="block w60 h60 iconfont fs08 c0894EC mar0 lh60 txac">&#xe64e;</span>';
+                        break;
+                      case 3:
+                        iconElem = '<img src="/sources/images/tu4036_8.jpg" class="w60 h60 borrad6" />';
+                        break;
+                      default:
+                        iconElem = '<span class="block w60 h60 iconfont fs08 c0894EC mar0 lh60 txac">&#xe646;</span>';
+                        break;
+                    }
+                    msgHtml += '<li class="msg-lists-block w100b mart10" data-msg-type="'+res['data'][i]['type']+'">' +
+                      '<div class="fll w15b">' + iconElem + '</div>' +
+                      '<div class="fll w70b">' +
+                        '<div class="item-title-row">' +
+                          '<div class="item-title fs06">' + res['data'][i]['title'] + '</div>' +
+                          '<div class="item-after fs06">'+ res['data'][i]['create_time'] +'</div>' +
+                        '</div>' +
+                        '<div class="item-text fs06">' + res['data'][i]['contents'] + '</div>' +
+                        '</div>' +
+                      '<div class="fll w10b"><span class="block iconfont fs08 mar0 marl10 marr20 h60 lh60">&#xe600;</span></div>' +
+                      '<div class="clear"></div>'
+                      '</li>';
+                  }
+                  $('#msg-lists-block').html($('#msg-lists-block').html() + msgHtml);
+                  isLoading = false;
+                } else {
+                  $.toast('没有更多数据可加载', 2000);
+                  //注销无限滚动事件
+                  $.detachInfiniteScroll($('.pull-to-refresh-content'));
+                  // 删除加载提示符
+                  $('.infinite-scroll-preloader').remove();
+                  isLoading = false;
+                  isHasData = false;
+                  return false;
+                }
+              } else {
+                $.toast('没有更多数据了', 3000);
+                // 加载完毕，则注销无限加载事件，以防不必要的加载
+                $.detachInfiniteScroll($('.pull-to-refresh-content'));
+                // 删除加载提示符
+                $('.infinite-scroll-preloader').remove();
+                isLoading = false;
+                isHasData = false;
+                return false;
+              }
+            },
+            error:function(err){
+              $.toast(err);
+              $('.infinite-scroll-preloader').css('dsipaly','nnone');
+            }
+          });
+        }
+      });
+    }
+    
+
+/**----------------------------------------------------------------------------------------------------------------------------------------------------------------**/
+
+
+  /**
+   * 点击查看信息详情
+   */
+  $(page).on('click','.msg-lists-block',function(){
+    if($(this).attr('data-msg-type') == '') return false;
+    $.router.loadPage('letter_detail.php?msg_type='+parseInt($(this).attr('data-msg-type')));
+  });
+
+  });
+});
+//

@@ -1,0 +1,69 @@
+<?php
+include_once('./Common/public.php');
+?>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>云兆●云商城</title>
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+        <link rel="shortcut icon" href="/favicon.ico">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="stylesheet" href="/sources/css/sm.min.css"/>
+        <link rel="stylesheet" href="/sources/css/sm-extend.min.css"/>
+        <link rel="stylesheet" href="/sources/css/demos.css">
+        <link rel="stylesheet" href="/sources/css/add.css">
+        <link rel="stylesheet" href="/sources/css/webuploader.css">
+
+    </head>
+    <body>
+        <div class="page" id="shop-son-category-add">
+            <header class="bar bar-nav">
+                <a class="pull-left back" href="shop_category_manage.php">
+                    <i class="icon iconfont mar0 white fs13">&#xe61b;</i>
+                </a>
+                <h1 class="title">添加子栏目</h1>
+            </header>
+
+            <!-- 工具栏 -->
+            <!--这里是内容区-->
+            <div class="content bgfff">
+                <div class="padl5 padr5" id="classify">
+                    <div class="w100b h50 lh50 borb1 bce6">
+                        <div class="fll txar w40b h50 lh50">
+                            <a href="javascript:void(0);" id="fenlei" class="external">继续添加分类
+                                </a>
+                        </div>
+                    </div>
+
+
+                    <div id="category_1" class="add_category w100b  lh50 borb1 bce6" style="display:;">
+                        <div class="padl20 w100b  mart5 flr">
+                        分类名：　<input type="text" class="add-create-categories bor0" data-parentid="0" value="" placeholder="">
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                
+                </div>
+                <a id="confirm-but" href="javascript:void(0);" class="external block w80b marauto h50 lh50 txac white bgCB1408 mart20 borrad5">确认</a>
+            </div>
+        </div>
+    </body>
+<script type="text/javascript" src="/sources/js/zepto-full.1.1.6.min.js"></script>
+<script type="text/javascript" src="/sources/js/sm.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/sm-extend.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/module/public.js"></script>
+<script type="text/javascript" src="/sources/js/module/jweixin-1.0.0.js"></script>
+
+<script type="text/javascript" src="/sources/js/webuploader.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.all.js"> </script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+
+<script type='text/javascript' data-main="/sources/js/app.js" src='/sources/js/require.js' charset='utf-8'></script>
+</html>

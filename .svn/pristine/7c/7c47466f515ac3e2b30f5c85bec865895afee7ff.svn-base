@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>云兆云商城</title>
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+		<link rel="shortcut icon" href="/favicon.ico">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<link rel="stylesheet" href="http://g.alicdn.com/msui/sm/0.5.7/css/??sm.min.css,sm-extend.min.css">
+		<link rel="stylesheet" href="/sources/css/demos.css">
+		<link rel="stylesheet" href="/sources/css/add.css">
+	</head>
+	<body>
+		<div class="page-group fs06">
+		<!-- page 容器 -->
+		<div class="page" id="page-cart">
+			<!-- 标题栏 -->
+			<header class="bar bar-nav">
+				<h1 class="title">购物车</h1>
+				<a class="pull-left back" href="product_list.html">
+					<i class="icon iconfont mar0 white fs13">&#xe61b;</i>
+				</a>
+				<a href="javascript:void(0);" id="edit-product-deatils-but" class="pull-right external icon h44 lh44 iconfont  white fs13 lh44 mar0" data-is-edit="false">&#xe627;</a>
+			</header>
+			<nav class="bar bar-tab h100">
+				<div class="w100b h50 bort1 borb1 bcc1c1c1 bgfff">
+					<a href="javascript:void(0);" class="all-select-but inlineblock col-33 fll h48 lh48 external c3D4145" data-is-all-selected="false"><i class="but-icon iconfont fs10 mar0 marl10 marr10">&#xe61c;</i><span class="but-text">全选</span></a>
+					<span class="inlineblock col-33 h48 fs07 txar w48b">
+						<span class="block h24 fs06 lh24 marr10">合计：<font class="cfa6a0b fs06"><element id="cart-total-block">0</element>元</font></span>
+						<span class="block h24 fs05 marr10">不含运费</span>
+					</span>
+					<a href="javascript:void(0);" id="submit_order" class="col-33 h48 lh48 flr external bgcFF3200 white txac ">结算(<span id="sum-num">0</span>)</a>
+				</div>
+				<div class="w100b h50">
+					<span class="toools-bar-but tab-item" style="cursor:pointer;" id="shop-index" data-but-type="index">
+						<i class="icon iconfont">&#xe640;</i>
+						<span class="tab-label">首页</span>
+					</span>
+					<span class="toools-bar-but tab-item" style="cursor:pointer;">
+						<i class="icon iconfont">&#xe684;</i>
+					<span class="tab-label">云兆云商</span>
+					</span>
+					<span class="toools-bar-but tab-item active" data-but-type="cart" style="cursor:pointer;">
+						<i class="icon iconfont">&#xe62e;</i>
+						<span class="tab-label">购物车</span>
+					</span>
+					<span class="toools-bar-but tab-item" data-but-type="order" style="cursor:pointer;">
+						<i class="icon iconfont">&#xe661;</i>
+						<span class="tab-label">订单</span>
+					</span>
+					<span class="toools-bar-but tab-item" data-but-type="member" style="cursor:pointer;">
+						<i class="icon iconfont">&#xe65e;</i>
+						<span class="tab-label">我的</span>
+					</span>
+				</div>
+		  </nav>
+			<!-- 这里是页面内容区 -->
+			<div class="content btm5r" id="cart-item">
+				<!-- <div class="card borrad0 marr0 marl0">
+					<div class="cart-list-content-box pad10 h100">
+						<div class="select-product-but w30 padt20 fll iconfont fs08 mar0" data-is-selected="false">&#xe62a;</div>
+						<div class="w80 fll">
+							<a class="c666 " href="goods.html">
+								<img class="w80 pos-r" style="top:50%;" src="/sources/images/goods3.jpg" alt="">
+							</a>
+						</div>
+						<div class="w70b fs06 fll">
+							<div class="padl10 padr10">
+								<a class="c666  fs08" href="goods.html">Apple Wireless Keyboard asdfrgggs</a>
+							</div>
+							<div class="show-product-attribute-box padl10">
+								<p class="mar0 mart5 marb5">商品参数：银白色</p>
+								<p class="mar0 ovfh"><span class="inlineblock fll cFF3200 fs08">&yen;<element class="product-price">85</element></span><span class="inlineblock flr fs08">x<element class="show-product-num">1</element></span></p>
+							</div>
+							<div class="edit-product-attribute-box" style="display:none;">
+								<div class="h30 fll mart10">
+									<a href="javascript:void(0);" class="subtractio-buts inlineblock w30 h30 lh30 mar0 txac bgE2E2E2 c666 iconfont  marl10">&#xe623;</a>
+									<span class="sum-totals inlineblock w30 h30 lh30 txac mar0">1</span>
+									<a href="javascript:void(0);" class="addition-buts inlineblock w30 h30 lh30 mar0 txac bgE2E2E2 c666 iconfont ">&#xe624;</a>
+								</div>
+								<div class="h30 flr mart10"><a class="datele-buts inlineblock c666 w30 h30 lh30 txac iconfont " href="javascript:void(0);">&#xe614;</a></div>
+							</div>
+						</div>
+					</div>
+				</div> -->
+			</div>
+		</div>
+	</div>
+	</body>
+<script type="text/javascript" src="/sources/js/zepto-full.1.1.6.min.js"></script>
+<script type="text/javascript" src="/sources/js/sm.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/sm-extend.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/module/public.js"></script>
+<script type="text/javascript" src="/sources/js/module/jweixin-1.0.0.js"></script>
+
+<script type="text/javascript" src="/sources/js/webuploader.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.all.js"> </script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+<script type='text/javascript' data-main="/sources/js/app.js" src='/sources/js/require.js' charset='utf-8'></script>
+</html>

@@ -1,0 +1,256 @@
+$(function() {
+    'use strict';
+    $(document).on('pageInit', '#page-apply-shop', function(e, id, page) {
+        var loginInfo = checkLogin();
+        if (loginInfo['is_has_shop'] == 1){
+            window.location.href = 'shop_manager.html';
+        }  
+        if (!loginInfo) {
+            window.location.href = 'login.html';
+        } else {
+            var userInfoStrToJson = loginInfo;
+        }
+        var levelhtml = '';
+        levelhtml ='您好，您现在的会员等级是'+ parseInt(userInfoStrToJson['levels']) +',现在就可以开通您的店铺。';
+        $('.page-current .levels').html(levelhtml);
+
+        //验证是否有存在数据录入
+        var shopinfo = sessionStorage.getItem('shop_info') || {};
+        if (Object.keys(shopinfo) > 0) {
+            shopinfo = JSON.parse(shopinfo);
+            $('#shopname').val(shopinfo.name);
+            $('#username').val(shopinfo.username);
+            $('#wechat').val(shopinfo.wechat);
+            $('#sex').val(shopinfo.sex);
+            $('#shop_address').val(shopinfo.shop_address);
+            $('#avatar').val(shopinfo.avatar);
+        }
+        //点击下一步　next-but
+        $(page).on('click', '#next-but', function() {
+            var name = $('#shopname').val();
+            if (!name) {
+                $.toast('请填写您的店铺名称！');
+                return false;
+            }
+            var username = $('#username').val();
+            if (!username) {
+                $.toast('请填写您的真实姓名！');
+                return false;
+            }
+            var wechat = $('#wechat').val();
+            if (!wechat) {
+                $.toast('请填写您的真实微信号！');
+                return false;
+            }
+            var tel = $('#tel').val();
+            if (!tel) {
+                $.toast('请填写您的移动电话！');
+                return false;
+            }
+            var addr = $('#addr').val();
+            if (!addr) {
+                $.toast('请填写您的礼包地址！');
+                return false;
+            }
+            // var sex = $('#sex').val();
+            // if (!sex) {
+            //     $.toast('请填写您的性别');
+            //     return false;
+            // }
+            if(!$("#protocol").is(':checked')){
+                $.toast('请阅读界微科技平台服务协议！');
+                return false;
+            }
+            var shopinfo = {};
+            shopinfo.name = name;
+            //shopinfo.avatar = avatar;
+            shopinfo.username = username;
+            shopinfo.wechat = wechat;
+            shopinfo.phone = tel;
+            shopinfo.address = addr;
+            shopinfo.type = 2;// 开店类型 默认为1 2为通过缴费开店的
+            //shopinfo.shop_address = shop_address;
+            //shopinfo.sex = sex;
+            sessionStorage.setItem('shop_info', JSON.stringify(shopinfo));
+            $.router.loadPage('apply_shop_create_category.html');
+        });
+    });
+
+    //添加类别
+    var count = 3;
+    var catid = 3;
+    $(document).on('pageInit', '#page-add-category', function(e, id, page) {
+            //添加父级分类
+            $(page).on('click', '#fenlei', function() {
+                    catid += 1;
+                    var category = '';
+                    category += '<div data-parentid="0" data-catid="' + catid + '" id="category_' + catid + '" class="add_category w100b h50 lh50 borb1 bce6">';
+                    category += '<div class="padl20 w100b h40 mart5 flr">';
+                    category += '分类：　<input type="text" class="add-create-cate bor0 w20b"  data-parentid="0" data-catid="' + catid + '"  placeholder="请在这里填写您的分类">';
+                    category += '<a href="#" class="p_cate c666" data-parentid="0"  data-catid="' + catid + '" type="text"><i class="icon iconfont c666">&#xe603;</i></a>';
+                    category += '<a href="javascript:void(0);" data-catid="' + catid + '" class="dele-but external marr10" data-but-fn="del-parent"><i class="icon iconfont c666">&#xe61a;</i></a>';
+                    //category += '<a href="#" class="marr10 del">删除</a>';
+                    category += '</div>';
+                    category += '<div class="clear"></div>';
+                    category += '</div>';
+                    $('#classify').append(category);
+                })
+                //添加子分类
+            $(page).on('click', '.p_cate', function() {
+                    var p_cate = '';
+                    var parentid = $(this).data('catid'); //data-parent-id
+                    var _catid = $("#classify > div").size();
+                    p_cate += '<div data-parentid="' + parentid + '" data-catid="' + _catid + '" class="category_' + parentid + ' child-class-block w100b h50 lh50 borb1 bce6">';
+                    p_cate += '<div class="padl20 w100b h40 mart5 flr">';
+                    p_cate += '<input type="text" class="add-create-cate child-class bor0 w40b" placeholder="填写子分类" value="" data-parentid="' + parentid + '"  data-catid="' + _catid + '" />';
+                    p_cate += '<div class="flr txar w40b h50 lh50">';
+                    p_cate += '<a href="javascript:void(0);" class="dele-but external marr10"  data-catid="' + _catid + '" data-but-fn="del-child"><i class="icon iconfont c666">&#xe61a;</i></a>';
+                    //p_cate += '<a href="#" class="marr10 del">删除</a>';
+                    p_cate += '</div>';
+                    p_cate += '</div>';
+                    p_cate += '<div class="clear"></div>';
+                    p_cate += '</div>';
+                    $("#category_" + parentid).after(p_cate);
+                })
+                //删除子分类
+            $(page).on('click', '.dele-but', function() {
+                if ($(this).attr('data-but-fn') == 'del-child') {
+                    var parent = $(this).parent().parent().parent();
+                    parent.remove();
+                } else {
+                    alert('是否删除子分类？');
+                    var parent = $(this).parent().parent();
+                    parent.remove();
+                }
+            });
+            //点击下一步　存入sessionstroage
+            $(page).on('click', '#next-but', function() {
+                var shop_add_category = {
+                    "0": {
+                        catid: 0,
+                        children: {}
+                    }
+                };
+                var children = {};
+                // shop_add_category = [];
+                var parentid = catid = 0;
+                var shop_import_goods = {};
+                $('.add-create-cate').each(function(index, elem) {
+                    var catinfo = {};
+                    catinfo.catid = catid = $(elem).data('catid');
+                    shop_import_goods[catid] = [];
+                    catinfo.catname = $(elem).val();
+                    var parentid = $(elem).data('parentid');
+                    catinfo.parentid = parentid;
+                    catinfo.children = {};
+                    if (parentid == "0") {
+                        shop_add_category["0"].children[catid] = catinfo;
+                    } else {
+                        shop_add_category["0"].children[parentid]['children'][catid] = catinfo;
+                    }
+                });
+                var shop_import_goods_data = JSON.stringify(shop_import_goods);
+                sessionStorage.setItem('shop_import_goods_data', shop_import_goods_data);
+                sessionStorage.setItem('cate_info', JSON.stringify(shop_add_category));
+                $.router.loadPage('apply_shop_import_goods.html');
+            })
+        })
+        //显示类别　导入商品
+    $(document).on('pageInit', '#page-add-goods', function(e, id, page) {
+        var proCount = 0;
+        var category = '';
+        var shop_category = sessionStorage.getItem('cate_info');
+        var shop_category = JSON.parse(shop_category);
+        var shop_import_goods_data = sessionStorage.getItem('shop_import_goods_data');
+        if (shop_import_goods_data == null) {
+            shop_import_goods_data = {};
+        } else {
+            shop_import_goods_data = JSON.parse(shop_import_goods_data);
+        }
+        $.each(shop_category["0"]['children'], function(catid, cat) {
+            var catitems = shop_import_goods_data[catid] || {};
+            if (!$.isEmptyObject(cat.children)) {
+                category += '<a href="javascript:void(0);" class="external">';
+            }else{
+                category += '<a href="apply_shop_import_goods_main.html?&fromcatid=' + catid + '" class="external">';
+            } 
+            category += '<li class="item-content">';
+            category += '<div class="item-media">';
+            category += '<i class="icon icon-right"></i></div>';
+            category += '<div class="item-inner">';
+            category += '<div class="_catename item-title fs15">' + cat.catname + '</div>';
+            category += '<div class="item-after">' + (Object.keys(cat.children) == 0 ? '<span class="badge">' + catitems.length + '</span>' : '') + '</div>';
+            proCount = proCount + catitems.length;
+            category += '</div>';
+            category += '</li>';
+            category += '</a>';
+            if (cat.children) {
+                $.each(cat.children, function(_catid, _cat) {
+                    var catitems = shop_import_goods_data[_catid] || {};
+                    category += '<a href="apply_shop_import_goods_main.html?&fromcatid=' + _catid + '" class="external">';
+                    category += '<li class="item-content">';
+                    category += '<div class="item-media">';
+                    category += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+                    category += '<div class="item-inner">';
+                    category += '<div class="_catename item-title fs15">' + _cat.catname + '</div>';
+                    category += '<div class="item-after"><span class="badge">' + catitems.length + '</span></div>';
+                     proCount = proCount + catitems.length;
+                    category += '</div>';
+                    category += '</li>';
+                    category += '</a>';
+                })
+            }
+        })
+
+        $('#cate-list-block').html(category);
+        $('.page-current #pro_number').html(proCount);
+
+        $(page).on('click', '#open-shop', function() {
+
+            var shop_info = sessionStorage.getItem('shop_info');
+            shop_info = JSON.parse(shop_info);
+            var cate_info = sessionStorage.getItem('cate_info');
+            cate_info = JSON.parse(cate_info);
+            var product_info = sessionStorage.getItem('shop_import_goods_data');
+            product_info = JSON.parse(product_info);
+            var countItems = 0;
+            $.each(product_info, function(i, item) {
+                countItems += item.length;
+            })
+            
+            if (apply_shop_select_goods_limit > countItems) {
+                $.toast('您的店铺商品数量应不得低于' + apply_shop_select_goods_limit + '款');
+                return;
+            }
+            var url = encodeURI(apiUrl + 'shop/index/addShop');
+
+            $.ajax({
+                url: url,
+                async: false,
+                type: 'POST',
+                data: {
+                    shopinfo: shop_info,
+                    cateinfo: cate_info,
+                    productinfo: product_info
+                },
+                headers: {
+                    "Token": sso_Token
+                },
+                success: function(result) {
+
+                    var data = $.parseJSON(result);
+                    if (data['code'] == 0) {
+                        $.toast('您已成功开通店铺!');
+                        $.router.loadPage('index.html?siteid=' + data.data);
+                    } else {
+                        $.toast('开通失败!请填写您的必要信息！');
+                        return false;
+                    }
+
+                }
+            });
+
+        })
+    })
+    //
+});

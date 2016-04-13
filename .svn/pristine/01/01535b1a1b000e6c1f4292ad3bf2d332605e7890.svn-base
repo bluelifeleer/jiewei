@@ -1,0 +1,31 @@
+$(function() {
+  'use strict';
+  $(document).on('pageInit', '#page-into-member', function(e, id, page) {
+    /**
+     * 用户加入会员操作
+     * @author 李鹏
+     * @date 2016-01-06
+     */
+    //判断用户是否登录
+    var loginInfo = checkLogin('1');
+    if (!loginInfo) {
+      $.router.loadPage('login.html');
+      return false;
+    }
+
+    // 微信支付获取openid
+$(page).on('click', '#openshop', function() {
+   
+   var appid = sessionStorage.getItem('appid') || 'wx34fdd0d60e7d4514';
+    var fromurl ='http://api.zj3w.net/wxpay/index/code?from=4';
+     if (isWeixin) {
+        var url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + appid + '&redirect_uri=' + encodeURIComponent(fromurl) + '&response_type=code&scope=snsapi_base&state=STATE%23wechat_redirect&connect_redirect=1#wechat_redirect';
+        location.href = url;
+        return false;
+    }
+});
+
+
+
+  });
+});

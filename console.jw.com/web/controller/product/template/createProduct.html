@@ -1,0 +1,504 @@
+{V "system","header"}
+
+<style>
+.bs-content-info, .bs-content-pic, .bs-content-detail {
+	position: relative;
+	padding: 45px 15px 15px;
+	margin: 15px;
+	border-color: #e5e5e5;
+	border-style: solid;
+	border-width: 1px;
+	-webkit-box-shadow: inset 0 3px 6px rgba(0, 0, 0, .05);
+	box-shadow: inset 0 3px 6px rgba(0, 0, 0, .05)
+}
+
+.bs-content-info:after {
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #959595;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	content: "基本信息"
+}
+
+.bs-content-pic:after {
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #959595;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	content: "上传图片"
+}
+
+.bs-content-detail:after {
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #959595;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	content: "详细信息"
+}
+</style>
+
+
+<body class="body pxgridsbody">
+	<section class="wrapper">
+		<div class="row">
+			<div class="col-lg-12">
+				<section class="panel  panel-info" style="border: 1px solid #ccc;">
+				
+					<div class="panel-body" style="padding: 0px;padding-bottom:120px;">
+
+						<form class="form-horizontal tasi-form" method="post"
+							enctype="multipart/form-data" action="">
+
+								<ul role="tablist" class="nav nav-tabs" id="myTab">
+									<li class="active" role="presentation"><a
+										aria-expanded="true" aria-controls="tabs1" data-toggle="tab"
+										role="tab" id="1tab" href="#tabs1">基本信息</a></li>
+									<li class="" role="presentation"><a aria-expanded="false"
+										aria-controls="tabs2" data-toggle="tab" id="2tab" role="tab"
+										href="#tabs2">图片上传</a></li>
+									<li class="" role="presentation"><a aria-expanded="false"
+										aria-controls="tabs3" data-toggle="tab" id="3tab" role="tab"
+										href="#tabs3">商品详情</a></li>
+								</ul>
+								<div class="tab-content" id="myTabContent">
+									<div aria-labelledby="1tab" id="tabs1"
+										class="tab-pane fade active in" role="tabpanel">
+
+										<div class="bs-content-info">
+											<!-- 商品基本信息 -->
+
+											<input type="hidden" class="_data" name="id" value="{$productInfo['id']}">
+											<input type="hidden" class="_data" name="dosubmit" value="1">
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">商品名称:</label>
+												<div class="col-sm-8">
+													<input type="text" class="form-control _data" name="title"
+														color="#000000" datatype="*" value="{$productInfo['title']}"
+														placeholder="请控制在30汉字以内" />
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">商品简要描述:</label>
+												<div class="col-sm-8">
+													<textarea class="form-control _data" rows="4" name="short_desc"
+														color="#000000" datatype="*">{$productInfo['short_desc']}</textarea>
+												</div>
+
+												<span class="help-block col-sm-offset-2 col-sm-8"
+													style="padding-top: 24px;">请用几句简短的话概括本次发布的内容,请控制在1４0个汉字以内
+												</span>
+											</div>
+
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">关键字:</label>
+												<div class="col-sm-8">
+													<input type="text" class="form-control _data" name="keywords"
+														color="#000000" datatype="*" value="{$productInfo['keywords']}"
+														placeholder="请用几个词语概括本次发布的内容,词语之间使用英文的逗号隔开" />
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">采购单价(内):</label>
+												<div class="col-sm-3">
+													<div class="input-group">
+														<div class="input-group-addon">&yen;</div>
+														<input type="text" class="form-control _data"
+															name="purchase_price" datatype="*" value="{$productInfo['purchase_price']}"
+															placeholder="请输入采购单价">
+													</div>
+												</div>
+												<label class="control-label col-sm-2"
+													style="text-align: right;">成本单价(外):</label>
+												<div class="col-sm-3">
+													<div class="input-group">
+														<div class="input-group-addon">&yen;</div>
+														<input type="text" class="form-control _data"
+															name="cost_price" datatype="*" value="{$productInfo['cost_price']}"
+															placeholder="请输入成本单价">
+													</div>
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">销售单价:</label>
+												<div class="col-sm-3">
+													<div class="input-group">
+														<div class="input-group-addon">&yen;</div>
+														<input type="text" class="form-control _data"
+															name="sale_price" datatype="*" value="{$productInfo['sale_price']}"
+															placeholder="请输入销售单价">
+													</div>
+												</div>
+												<label class="control-label col-sm-2"
+													style="text-align: right;">商品库存:</label>
+												<div class="col-sm-3">
+													<div class="input-group">
+														<input type="text" class="form-control _data"
+															name="stock"  datatype="n" value="{$productInfo['stock']}"
+															placeholder="请输入商品库存">
+														<div class="input-group-addon">件</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">商品等级:</label>
+												<div class="col-sm-3">
+												{select($proLevels, $productInfo['level']!=''?$productInfo['level']:'0', 'class="form-control _data" id="typeid" name="level"','')}
+												</div>
+												<label class="control-label col-sm-2"
+													style="text-align: right;">所属栏目:</label>
+												<div class="col-sm-3">
+												{select_category($categories,$productInfo['catid']!=''?$productInfo['catid']:'0' , 'class="form-control _data" id="catid" name="catid"','',1)}
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">热门属性:</label>
+												<div class="col-sm-3">
+													<div class="input-group"
+														style="padding-top:4px;line-height: 22px;">
+														{radio($hotArray,$productInfo['is_hot'] !=''?$productInfo['is_hot']:'99','class="_data" name="is_hot"')}
+													</div>
+												</div>
+												<label class="control-label col-sm-2"
+													style="text-align: right;">爆款属性:</label>
+												<div class="col-sm-3">
+													<div class="input-group"
+														style="padding-top:4px;line-height: 22px;">
+														{radio($explosion_array,$productInfo['is_explosion'] !=''?$productInfo['is_explosion']:'1','class="_data" name="is_explosion"')}
+													</div>
+												</div>
+											</div>
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">上架属性:</label>
+												<div class="col-sm-3">
+													<div class="input-group"
+														style="padding-top:4px;line-height: 22px;">
+														{radio($upArray,$productInfo['is_up'] !=''?$productInfo['is_up']:'1','class="_data" name="is_up"')}
+													</div>
+												</div>
+												<label class="control-label col-sm-2"
+													style="text-align: right;">推荐属性:</label>
+												<div class="col-sm-3">
+													<div class="input-group"
+														style="padding-top:4px;line-height: 22px;">
+														{radio($recommend_array,$productInfo['is_recommend'] !=''?$productInfo['is_recommend']:'1','class="_data" name="is_recommend"')}
+													</div>
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">进口属性:</label>
+												<div class="col-sm-3">
+													<div class="input-group"
+														style="padding-top:4px;line-height: 22px;">
+														{radio($overseas_array,$productInfo['is_overseas'] !=''?$productInfo['is_overseas']:'1','class="_data" name="is_overseas"')}
+													</div>
+												</div>
+												<label class="control-label col-sm-2"
+													style="text-align: right;">虚拟产品:</label>
+												<div class="col-sm-3">
+													<div class="input-group"
+														style="padding-top:4px;line-height: 22px;">
+														{radio($isReal_array,$productInfo['is_real'] !=''?$productInfo['is_real']:'1','class="_data" name="is_real"')}
+													</div>
+												</div>
+												
+											</div>
+
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">产地:</label>
+												<div class="col-sm-3">
+													<input type="text" class="form-control _data" name="made"
+														color="#000000" datatype="*" value="{$productInfo['made']}"
+														placeholder="填写商品产地" />
+												</div>
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">货号:</label>
+												<div class="col-sm-3">
+													<input type="text" class="form-control _data" name="product_sn"
+														color="#000000" datatype="*" value="{$productInfo['product_sn']}"
+														placeholder="填写商品货号" />
+												</div>
+											</div>
+										</div>
+
+									</div>
+
+									<div aria-labelledby="2tab" id="tabs2" class="tab-pane fade"
+										role="tabpanel">
+										<div class="bs-content-pic">
+											<!-- 商品图片上传处理 -->
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">封面图片:</label>
+												<div class="col-sm-9">
+													<?php echo webuploader('thumb',$productInfo['thumb'],'product/thumb/'.date('Y/m/d',SYS_TIME),1,'jpg|jpeg|png',array('width'=>'300px','height'=>'300px'),true);?>
+													<span class="help-block col-md-9">建议上传宽高比例为1:1的图片,支持图片格式(jpg,jpeg,png),不能超过200KB</span>
+												</div>
+											</div>
+
+
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">图组:</label>
+												<div class="col-sm-9">
+													<?php echo webuploader('pictures',$productInfo['pictures'],'product/pictures/'.date('Y/m/d',SYS_TIME),10,'jpg|jpeg|png',array('width'=>'240px','height'=>'240px'),false);?>
+													<span class="help-block col-md-9">支持图片格式(jpg,jpeg,png),不能超过200KB</span>
+												</div>
+											</div>
+
+										</div>
+									</div>
+
+									<div aria-labelledby="3tab" id="tabs3" class="tab-pane fade"
+										role="tabpanel">
+
+
+										<div class="bs-content-detail">
+											<!-- 商品详细内容 -->
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">商品物流方式:</label>
+												<div class="col-sm-8">
+													<input type="text" class="form-control _data" name="transit_type"
+														color="#000000" datatype="*" value="{$productInfo['transit_type']}"
+														placeholder="用一句关键字描述物流方式，如免邮" />
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">商品物流费用:</label>
+												<div class="col-sm-3">
+													<div class="input-group">
+														<div class="input-group-addon">&yen;</div>
+														<input type="text" class="form-control _data"
+															name="transit_cost" datatype="*" value="{$productInfo['transit_cost']}"
+															placeholder="请输入物流费用"> 
+													</div>
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="control-label col-sm-2"
+													style="text-align: right;">商品属性:</label>
+
+												<div class="col-sm-8">
+													<a href="javascript:void(0);" id="add-param" class="btn btn-primary btn-sm"  style="" id="index-add">
+													<i class="icon-plus btn-icon"></i>添加属性</a>
+												</div>
+
+
+											</div>
+
+											<div class="form-group">
+											   	<div class="col-sm-2 ">
+											  
+											   	</div>
+									               
+								                <div class="col-sm-8">
+							                		<table id="param-content" class="table table-hover" style="border: 1px solid #E9EAEE;">
+							                			<tr style="border: 1px solid #E9EAEE;">
+							               					<td class="col-sm-1 input-group" class="col-sm-12" style="padding-left:12px;">
+							               					属性名
+							               					</td>
+							               					<td class="col-sm-8 input-group" style="padding-left:6px;">
+							               					属性值
+							               					</td>
+							               				</tr>
+							               				<?php echo $html ?>
+													</table>
+								                </div>
+								               
+									        </div>
+
+
+											<div class="form-group">
+												<label class="col-sm-2 control-label"
+													style="text-align: right;">商品详情:</label>
+												<div class="col-sm-9">
+													<?php echo editor("content","content",$productInfo['content'],'700');?>
+												</div>
+											</div>
+										</div>
+
+									</div>
+
+								</div>
+
+
+							<div class="form-group">
+								<label class="col-sm-7 control-label"></label>
+								<div class="col-sm-1">
+									<input class="btn btn-info" type="button" id="submit" value="提交">
+								</div>
+								<div class="col-sm-4">
+									<a class="btn btn-info btn-danger" target="iframeid"
+										href="{U($url,'product','index','listing' )}">返回</a>
+								</div>
+							</div>
+						</form>
+					</div>
+				</section>
+			</div>
+		</div>
+	</section>
+
+	<script src="/resource/js/bootstrap.min.js"></script>
+	<script src="/resource/js/jquery.nicescroll.js" type="text/javascript"></script>
+	<script src="/resource/js/pxgrids-scripts.js"></script>
+	<script type="text/javascript">
+		$(function() {
+
+			$('#add-param').click(function(){
+				var html = '';
+				html += '<tr>';
+				html += '<td class="col-sm-1 input-group" class="col-sm-12" style="padding-left:10px;">';
+				html += '<input type="text" name="paramName" value="" placeholder="请输入属性名" />'
+				html += '</td>';
+				html += '<td class="col-sm-8 input-group">';
+				html += '<input type="text" class="col-sm-12 paramValue" name="paramValue" value="" placeholder="请输入属性值" />';
+							               						
+				html += '</td>';
+				html += '<td onclick="$(this).parent().remove();">移除</td>';
+				html += '</tr>';
+				$('#param-content').append(html);
+			});
+			
+				$(".form-horizontal").Validform({
+					tiptype : 3
+				});
+
+			$('#submit').click(function(){
+
+				var params = '{';
+				if($('input[name=paramName]').length>0){
+					$('input[name=paramName]').each(function(index){
+						
+						var paramName = $(this).val();
+						var paramValue = $('input[name=paramValue]').eq(index).val();
+						params = params+'"'+paramName + '":'+'"'+paramValue+'",';
+
+					});
+					params = params.substring(0,params.length-1);
+				}
+				
+				params += '}';
+
+				var loding = layer.load(1, {
+					shade: [0.1,'#000'] //0.1透明度的白色背景
+				});
+				var url = '';
+				var _this = $(this);
+				var data = new Object();
+				var $data = $('._data');
+				var isSubmit = true;
+				$data.each(function(i,v){
+					data[$(this).attr('name')] = $(this).val();
+				});
+				data['is_hot'] = $('input:radio[name="is_hot"]:checked').val();
+				data['is_explosion'] = $('input:radio[name="is_explosion"]:checked').val();
+				data['is_overseas'] = $('input:radio[name="is_overseas"]:checked').val();
+				data['is_recommend'] = $('input:radio[name="is_recommend"]:checked').val();
+				data['is_up'] = $('input:radio[name="is_up"]:checked').val();
+				data['is_real'] = $('input:radio[name="is_real"]:checked').val();
+				
+				content.getKfContent(function(content){
+					data.content = content;
+					var isSubmit = true;
+					if(data){
+						//获取缩略图
+						if($('input[name="thumb[]"]').val() != '' || $('input[name="thumb[]"]').val() != undefined){
+							data['thumb'] = $('input[name="thumb[]"]').val();
+						}
+						
+						//获取图组
+						var pic = new Object();
+						$.each($('input[name="pictures[]"]'),function(i,v){
+							if($(this).val() != ""){
+								pic[i] = $(this).val();
+							}
+						});
+
+						if(JSON.stringify(pic) == "{}") isSubmit = false;
+						data['pictures'] = pic;
+
+						
+
+						for(var ele in data){
+							if(data[ele] == ''){
+								if(ele !='id') isSubmit = false;
+							}
+						}
+
+
+						if(!isSubmit){
+							layer.msg('请检查，存在必填项未填写！', {
+							    icon: 1,
+							    time: 1000 //2秒关闭（如果不配置，默认是3秒）
+							}, function(){
+								layer.close(loding);
+								return false;
+							});
+
+						}else{
+							data['dosubmit'] = 1;
+							data['params'] = params;
+
+							if(data.id == ''){
+								url = '{U(1,"product","product","create")}';
+							}else{
+								url = '{U(1,"product","product","edit")}';
+							}
+
+							$.post(url,data,function(res){
+								var res = $.parseJSON(res);
+								if(res.code == '200'){
+									layer.close(loding);
+									window.location.href = "{U(1,"product","product",'success',array('catid'=>$productInfo['catid']))}";
+								}
+								if(res.code == '300'){
+									layer.msg(res.info+'，请检查后再次提交！', {
+									    icon: 1,
+									    time: 3000 //2秒关闭（如果不配置，默认是3秒）
+									}, function(){
+										layer.close(loding);
+										return false;
+									});
+								}
+
+						});
+
+						}
+
+					}
+				})
+			})
+		})
+	</script>
+</body>

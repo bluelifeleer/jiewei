@@ -1,0 +1,119 @@
+<?php
+class indexController extends Controller {
+	public $initphp_list = array('order_lists', 'delivery', 'get', 'search', 'salesReturn');
+	public function __construct() {
+		parent::__construct();
+	}
+
+	/**
+	 * 订单列表
+	 */
+	public function order_lists() {
+		$lockTime = time();
+		$pager = $this->getLibrary('pager');
+		$value = array('order_status', 'num', 'page', 'is_key', 'sort');
+		$data = $this->controller->get_gp($value, 'G');
+		$where = isset($data['order_status']) && $data['order_status'] != '' ? array('order_status' => intval($data['order_status'])) : array('order_status' => '');
+		$num = isset($data['num']) && $data['num'] != '' ? intval($data['num']) : 5;
+		$offset = isset($data['page']) && $data['page'] != '' ? intval($data['page']) : 0;
+		$is_key = isset($data['is_key']) && $data['is_key'] != '' ? trim($data['is_key']) : 'add_time';
+		$sort = isset($data['sort']) && $data['sort'] != '' ? trim($data['sort']) : 'DESC';
+		$orderLists = InitPHP::getRemoteService('order', 'managerOrderlists', array($where, $num, $offset, $is_key, $sort));
+		$orderCollection = $orderLists['data'][0];
+		$orderCount = intval($orderLists['data'][1]);
+		// var_dump();
+
+		// $pages = $pager->pager(intval($orderCount), 5, 'index.php?m=order&c=index&a=order_lists');
+		$current_page = $offset + 1;
+		$pages = pages($orderCount, $current_page, $num, '', array(), 10, array('order_status' => $data['order_status']));
+		include V('order', 'order_lists');
+	}
+
+	/*
+		   * 发货操作
+		   * pay_status　支付状态
+		   * shipping_id 物流方式id
+		   * shipping_name 物流名称
+		   * shipping_fee 物流费用
+		   * shipping_no 物流单号
+		   * shipping_time 发货时间
+		   * pay_no　支付编号
+		   *
+	*/
+	public function delivery() {
+		$value = array('goodsid', 'orderid');
+		$infoid = $this->controller->get_gp($value, 'G'); //商品id
+		$where = array('goods_id' => $infoid['goodsid'], 'order_id' => $infoid['orderid']);
+		$ordergoodinfo = InitPHP::getRemoteService('orderGoods', 'get', array($where));
+		$ordergoodinfo['goods_attr'] = json_decode($ordergoodinfo['goods_attr'], true);
+		$productattr = '';
+		foreach ($ordergoodinfo['goods_attr'] as $key => $value) {
+			$productattr .= $key . ':' . $value . ',';
+		}
+		$ordergoodinfo['goods_attr'] = $productattr;
+		//var_dump(json_decode($ordergoodinfo['goods_attr']));die();
+		$order_info = InitPHP::getRemoteService('order', 'get', array(array('order_id' => $where['order_id'])));
+		if ($order_info['data']['pay_status'] == 1) {
+			$pay_status = '未支付';
+		} else {
+			$pay_status = '已支付';
+		}
+		if (intval($_POST['dosubmit']) > 0) {
+			$order_info = array('shipping_id', 'shipping_no', 'shipping_time');
+			$data = $this->controller->get_gp($order_info, 'P'); //物流等信息
+			if ($data['shipping_id'] == '' || $data['shipping_no'] == '' || $data['shipping_time'] == '') {
+				showmessage('请填写完整的物流信息！', '');
+				return false;
+			}
+			//查询shipping_com shipping_name
+			$shippinginfo = InitPHP::getRemoteService('transit', 'get', array(array('id' => $data['shipping_id'])));
+			$data['shipping_com'] = $shippinginfo['com'];
+			$data['shipping_name'] = $shippinginfo['name'];
+			$data['goods_status'] = 3;
+			$data['shipping_time'] = strtotime($data['shipping_time']);
+			//更新多个商品信息
+			$where['from_id'] = '1';
+			unset($where['goods_id']);
+			$ordergoodinfo = InitPHP::getRemoteService('orderGoods', 'lists', array($where, 1000, 0, 'og_id', 'asc', 'og_id', '*'));
+			foreach ($ordergoodinfo[0] as $key => $value) {
+				$orderupdate = InitPHP::getRemoteService('orderGoods', 'update', array($data, array('og_id' => $value['og_id'])));
+			}
+			if ($orderupdate) {
+				$goods_status = InitPHP::getRemoteService('orderGoods', 'lists', array(array('order_id' => $where['order_id'], 'goods_status' => 2), 1000, 0, 'og_id', 'asc', 'og_id', 'goods_status'));
+				if (count($goods_status[0]) == 0) {
+					InitPHP::getRemoteService('order', 'update', array(array('order_status' => 3), array('order_id' => $where['order_id'])));
+				}
+				showmessage('发货成功', '/index.php?m=order&c=index&a=order_lists');
+			} else {
+				showmessage('发货失败', '/index.php?m=order&c=index&a=order_lists');
+			}
+		} else {
+			$shipping = InitPHP::getRemoteService('transit', 'lists', array(array()));
+			$shippinglist = $shipping[0];
+			include V('order', 'edit');
+		}
+	}
+
+	public function search() {
+		$value = array('order_id');
+		$data = $this->controller->get_gp($value, 'P');
+		$orderLists = InitPHP::getRemoteService('order', 'get', array(array('order_id' => $data['order_id']), true));
+		$orderLists['data']['add_time'] = date('Y-m-d H:i:s', $orderLists['data']['add_time']);
+		$orderLists['data']['pay_time'] = $orderLists['data']['pay_time'] != '' ? date('Y-m-d H:i:s', $orderLists['data']['pay_time']) : '';
+		include V('order', 'search');
+	}
+
+	public function salesReturn() {
+		$value = array('goodsid');
+		$data = $this->controller->get_gp($value, 'G');
+		$where = array('goods_id' => $data['goodsid']);
+		$order_status['is_after_sales'] = 3;
+		$res = InitPHP::getRemoteService('orderGoods', 'update', array($order_status, $where));
+		if ($res) {
+			showmessage('您已同意退货', '/index.php?m=order&c=index&a=order_lists');
+		} else {
+			showmessage('操作失败', '/index.php?m=order&c=index&a=order_lists');
+		}
+	}
+
+}

@@ -1,0 +1,67 @@
+$(function() {
+  'use strict';
+  $(document).on('pageInit', '#page-balance', function(e, id, page) {
+    var loginInfo = checkLogin();
+    if (!loginInfo) {
+      $.router.loadPage('login.html');
+    }
+    $.showIndicator();
+    //获取余额
+    var url = encodeURI(apiUrl + 'account/index/getWallet');
+    $.ajax({
+      url: url,
+      async: false,
+      type: 'GET',
+      headers: {
+        "Token": sso_Token
+      },
+      success: function(respose) {
+        respose = JSON.parse(respose);
+        if (respose.code == 0) {
+          //隐藏加载器
+          $.hideIndicator();
+          var numAmount = 0;
+          //可提现金额
+          $('#cash-amount').html(parseFloat(respose['data']['amount']));
+          //冻结金额(购物时所购买的每件商品的反利)
+          $('#frozen-amount').html(parseFloat(respose['data']['frozen_amount']));
+          //总金额=可提现金额+冻结金额
+          numAmount = parseFloat(respose['data']['amount'])+parseFloat(respose['data']['frozen_amount']);
+          //总金额
+          $('#sun-amount').html(numAmount);
+          //当月奖金
+          $('#month-bonus-amount').html(parseFloat(respose['data']['current_month_bonus']));
+          //当月销售额
+          $('#month-sales-amount').html(parseFloat(respose['data']['current_month_sales_amount']));
+        }else{
+          //隐藏加载器
+          $.hideIndicator();
+          $.toast();
+        }
+
+      },
+      error: function(err){
+        //隐藏加载器
+        $.hideIndicator();
+        $.toast('加载出错');
+      }
+
+    });
+    
+    // 微信支付
+    $(page).on('click','#recharge',function(){
+        var host = 'http://www.zj3w.net/';
+            // var host = sessionStorage.getItem('site_host');
+        var appid = sessionStorage.getItem('appid') || 'wx34fdd0d60e7d4514';
+        var fromurl ='http://api.zj3w.net/wxpay/index/code?&from=1';
+         if (isWeixin) {
+            var url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + appid + '&redirect_uri=' + encodeURIComponent(fromurl) + '&response_type=code&scope=snsapi_base&state=STATE%23wechat_redirect&connect_redirect=1#wechat_redirect';
+            location.href = url;
+            return false;
+        }
+
+    });
+  
+
+  });
+});

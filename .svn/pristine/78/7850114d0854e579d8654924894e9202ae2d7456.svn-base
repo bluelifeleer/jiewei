@@ -1,0 +1,33 @@
+{V "system","header"}
+<body class="body">
+	<section id="iframecontent">
+		<!-- <section class="treelistframe pull-left">
+        <iframe  width="190px" name="treemain" id="treemain" frameborder="false" scrolling="auto" height="auto" allowtransparency="true" frameborder="0" src="?m=system&c=category&a=leftbar&_menuid=<?php echo $_GET['_menuid'];?>"></iframe>
+    </section> -->
+		<section  id="iframecontent">
+			<!-- iframe  width="100%" name="iframeid" id="iframeid" frameborder="false" scrolling="auto" height="auto" allowtransparency="true" frameborder="0" src=""></iframe> -->
+	
+	<section class="wrapper">
+			<div class="row">
+				<div class="col-lg-12">
+				<section class="panel panel-info" style="border: 1px solid #ccc;">
+					<header class="panel-heading" style="padding: 10px;">
+						<span>红包管理</span>
+					</header>
+					<div class="panel-body" id="panel-bodys" style="padding: 10px;">
+					
+						<h1>红包管理</h1>
+					</div>
+					</section>
+				
+				</div>
+			</div>
+		
+			</section>
+			
+		</section>
+	</section>
+	<script src="/resource/js/bootstrap.min.js"></script>
+	<script src="/resource/js/contentiframe.js"></script>
+</body>
+</html>

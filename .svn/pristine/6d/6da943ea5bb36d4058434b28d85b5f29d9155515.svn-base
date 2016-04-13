@@ -1,0 +1,310 @@
+<?php
+/**
+ * 支付服务系统
+ * @author 李鹏
+ * @data 2016-01-07
+ * @editDate 2016-03-10
+ */
+class payService extends Service
+{
+
+    public function __contruct()
+    {
+        parent::__contruct();
+
+    }
+
+    /**
+     * 添加支付信息
+     * @param [array] $data [支付信息数据]
+     * @return [boolean] $status [添加是否成功或失败]
+     * @author 李鹏
+     * @date 2016-01-07
+     */
+    public function create($data)
+    {
+        $insert_id = InitPHP::getDao('paySpend')->create($data);
+        if ($insert_id) {
+            return InitPHP::Encode(0, 'Success', $insert_id, 1);
+        } else {
+            return InitPHP::Encode(1, 'Error', $insert_id, 1);
+        }
+    }
+
+    /**
+     * 更新一条数据
+     * @param [array] $data [要更新的数据]
+     * @param [array] $where [更新的条件]
+     * @return [boolean] $updateStatus [更新后的状态]
+     * @author 李鹏
+     * @date 2016-01-07
+     * @editTime 2016-02-26
+     */
+    public function update($data, $where)
+    {
+        $updateStatus = InitPHP::getDao('pay')->update($data, $where);
+        if ($updateStatus) {
+            return InitPHP::Encode(0, 'Success', $updateStatus, 1);
+        } else {
+            return InitPHP::Encode(1, 'Error', '', 1);
+        }
+    }
+
+    /**
+     * 支付订单
+     * @param  [string] $userid   [购买商品的用户id]
+     * @param  [string] $username [购买商品的用户名]
+     * @param  [string] $order_id [订单id]
+     * @return [type]           [description]
+     * @author 李鹏
+     * @date 2016-03-10
+     */
+    public function payOrder($where)
+    {
+        //开启事务
+        InitPHP::getDao('pay')->transaction_start();
+        //支付时间
+        $timer = time();
+        //生成支付单号
+        $pay_no = strtoupper(md5(create_sn()));
+        //获取订单信息
+        $orderDetail = InitPHP::getDao('order')->get(array('userid' => $where['userid'], 'order_id' => $where['order_id']));
+        //获取用户总余额
+        $amountInfo = InitPHP::getDao('wallet')->get(array('userid' => $where['userid']));
+        //要更新的支付的条件
+        $updateWhere = array(
+            'userid'   => $where['userid'],
+            'order_id' => $where['order_id'],
+        );
+        //要更新的支付的数据
+        $updateData = array(
+            'pay_no'      => $pay_no, //支付单号
+            'pay_type'    => 1, //支付类型id
+            'pay_account' => '', //支付帐号
+            'pay_status'  => 2, //支付状态
+            'pay_time'    => $timer, //支付时间
+        );
+        //更新订单条件
+        $upDateOrderWhere = array(
+            'userid'   => $where['userid'],
+            'order_id' => $where['order_id'],
+        );
+        //更新订单数据
+        $updateOrderData = array(
+            'order_status' => 2, //订单状态
+            'pay_status'   => 2, //支付状态
+            'pay_time'     => $timer, //支付时间
+            'pay_no'       => $pay_no, //支付单号
+        );
+
+        //更新订单商品条件
+        $updateOrderGoodsWhere = array('order_id' => $orderDetail['order_id']);
+        //更新订单商品数据
+        $updateOrderGoodsData = array('goods_status' => 2);
+
+        //更新钱包数据
+        //sprintf("%01.2f", $money);
+        $updateAmountData = array(
+            'amount' => sprintf("%01.2f", (sprintf("%01.2f", $amountInfo['amount']) - sprintf("%01.2f", $where['pay_free']))),
+        );
+
+        //购物帐单记录
+        $shopBillsData = array(
+            'creat_at'    => $timer,
+            'userid'      => $where['userid'],
+            'username'    => $where['username'],
+            'type'        => 1,
+            'value'       => $where['pay_free'],
+            'op_userid'   => 0,
+            'op_username' => 'system',
+            'msg'         => '购物消费记录',
+            'log'         => '',
+        );
+
+        //资金流动记录
+        $capitalLiquidData = array(
+            'userid'      => $where['userid'],
+            'shop_id'     => '',
+            'title'       => '购物消费记录',
+            'content'     => '购物消费记录',
+            'amount'      => sprintf("%01.2f", $where['pay_free']),
+            'make'        => '',
+            'status'      => 1,
+            'type'        => 2,
+            'create_time' => $timer,
+            'action'      => -1,
+        );
+
+        //获取订单中的商品信息，并判断商品所属，并更新商品库存
+        $updateGoodsStockStatus   = false;
+        $upDataGoodsStock         = null;
+        $getGoodsStock            = 0;
+        $updateSellerWalletStatus = '';
+        $tempStatus               = false;
+        $orderGoodsInfo           = InitPHP::getDao('orderGoods')->lists(array('order_id' => $orderDetail['order_id']));
+        for ($i = 0; $i < count($orderGoodsInfo[0]); $i++) {
+            //获取商品的信息
+            $getGoodsDetail = InitPHP::getDao('product')->get(array('id' => intval($orderGoodsInfo[0][$i]['goods_id'])));
+            if ($getGoodsDetail['sysadd'] == 1 && $getGoodsDetail['fromid'] == '') {
+//平台商品
+                //获取商品的库存
+                $getGoodsStock = $getGoodsDetail['stock'];
+                //获取商品销量
+                $getGoodsSales = $getGoodsDetail['sales'];
+                //计算库存
+                $stock = intval(intval($getGoodsStock) - intval($orderGoodsInfo[0][$i]['goods_number']));
+                //计算销量
+                $sales = intval(intval($getGoodsSales) + intval($orderGoodsInfo[0][$i]['goods_number']));
+                //更新商品库存
+                $upDataGoodsStock = InitPHP::getDao('product')->update(array('stock' => $stock, 'sales' => $sales), array('id' => $getGoodsDetail['id']));
+
+                $tempStatus = $upDataGoodsStock ? true : false;
+
+            } else if ($getGoodsDetail['sysadd'] == 0 && $getGoodsDetail['fromid'] != '') {
+//用户导入平台的商品
+                //获取用户导入的商品信息
+                $importGoodsInfo = InitPHP::getDao('product')->get(array('id' => intval($getGoodsDetail['fromid'])));
+                //获取商品的库存
+                $getGoodsStock = $importGoodsInfo['stock'];
+                //获取商品销量
+                $getGoodsSales = $importGoodsInfo['sales'];
+                //计算库存
+                $stock = intval(intval($getGoodsStock) - intval($orderGoodsInfo[0][$i]['goods_number']));
+                //计算销量
+                $sales = intval(intval($getGoodsSales) + intval($orderGoodsInfo[0][$i]['goods_number']));
+                //更新商品库存
+                $upDataGoodsStock = InitPHP::getDao('product')->update(array('stock' => $stock, 'sales' => $sales), array('id' => $getGoodsDetail['id']));
+
+                $tempStatus = $upDataGoodsStock ? true : false;
+
+            } else {
+//用户自己商品
+                //获取商品的库存
+                $getGoodsStock = $getGoodsDetail['stock'];
+                $getGoodsSales = $getGoodsDetail['sales'];
+                //获取店家的钱包
+                $sellerWallet = InitPHP::getDao('wallet')->get(array('userid' => $getGoodsDetail['userid']));
+                //计算应该冻结的金额，要冻结的金额为当前订单中所属卖家自己上传的商品所有的金额
+                $frozenAmount = sprintf("%01.2f", sprintf("%01.2f", $sellerWallet['frozen_amount']) + sprintf("%01.2f", ($orderGoodsInfo['goods_number'] * $orderGoodsInfo['goods_price'])));
+                //更新数据
+                $updateSellerWalletStatus = InitPHP::getDao('wallet')->update(array('frozen_amount' => $frozenAmount), array('userid' => $getGoodsDetail['userid']));
+
+                //计算库存
+                $stock = intval(intval($getGoodsStock) - intval($orderGoodsInfo[0][$i]['goods_number']));
+                //计算销量
+                $sales = intval($getGoodsSales) + intval($orderGoodsInfo[0][$i]['goods_number']);
+                //更新商品库存
+                $upDataGoodsStock = InitPHP::getDao('product')->update(array('stock' => $stock, 'sales' => $sales), array('id' => $getGoodsDetail['id']));
+
+                $tempStatus = $upDataGoodsStock || $updateSellerWalletStatus ? true : false;
+
+            }
+
+        }
+
+        //判断更新所有商品的库存,并且更新卖家冻结金额是否成功
+        if ($tempStatus) {
+            $updateGoodsStockStatus = true;
+        } else {
+            $updateGoodsStockStatus = false;
+        }
+
+        //更新支付状态
+        $updatePayStatus = InitPHP::getDao('pay')->update($updateData, $updateWhere);
+        //更新余额
+        $updateAmountStatus = InitPHP::getDao('wallet')->update($updateAmountData, array('userid' => $where['userid']));
+        //更新订单信息状态
+        $updateOrderStatus = InitPHP::getDao('order')->update($updateOrderData, $upDateOrderWhere);
+        //更新订单商品状态
+        $updataOrderGoddsStatus = InitPHP::getDao('orderGoods')->update($updateOrderGoodsData, $updateOrderGoodsWhere);
+        //添加消费记录
+        $paySpend = InitPHP::getDao('paySpend')->create($shopBillsData);
+        //添加资金流动数据
+        $capitalLiquidId = InitPHP::getDao('capitalLiquid')->create($capitalLiquidData);
+
+        if ($updateGoodsStockStatus && $updataOrderGoddsStatus && $updatePayStatus && $updateAmountStatus && $updateOrderStatus && $paySpend > 0 && $capitalLiquidId > 0) {
+            //提交事务
+            InitPHP::getDao('pay')->transaction_commit();
+            return InitPHP::Encode(0, 'Success', $pay_no, 1);
+        } else {
+            //回滚事务
+            InitPHP::getDao('pay')->transaction_rollback();
+            return InitPHP::Encode(1, 'Error', '', 1);
+        }
+
+    }
+
+    /**
+     * 获取一条数据
+     * @param [array] $where [获取数据的条件]
+     * @return [array] $result [获取的一条数据]
+     * @author 李鹏
+     * @date 2016-01-07
+     *
+     */
+    public function get($userid, $payid)
+    {
+        $where  = array('userid' => $userid, 'id' => $payid);
+        $result = InitPHP::getDao('paySpend')->get($where);
+        if ($result) {
+            return InitPHP::Encode(0, 'Success', $result, 1);
+        } else {
+            return InitPHP::Encode(1, 'Error', $result, 1);
+        }
+    }
+
+    /**
+     * 获取一组数据
+     * @param [array] $where [查询条件，必填]
+     * @param [integer] $offset [指定查询的位置]
+     * @param [integer] $num [指定查询的数量]
+     * @param [array] $field [指定要查询的数据的字段]
+     * @param [string] $is_key [指定要字段按什么字段排序]
+     * @param [string] $sort [指定排序方式，ASC:正序,DESC倒序，默认]
+     * @return [array] $lists [返回查询成功后的所有数据]
+     * @author 李鹏
+     * @date 2016-01-07
+     */
+    public function lists($where = array(''), $num = 10, $offset = 0, $is_key = 'id', $sort = 'DESC')
+    {
+        $paySpendLists = InitPHP::getDao('paySpend')->lists($where, $num, $offset, $is_key, $sort);
+        if ($paySpendLists) {
+            return InitPHP::Encode(0, 'Success', $paySpendLists, 1);
+        } else {
+            return InitPHP::Encode(1, 'Error', $paySpendLists, 1);
+        }
+    }
+
+    /**
+     * 删除一条数据
+     * @param [array] $where [要删除的条件]
+     * @return [boolean] $deleteStatus [删除是否成功的状态]
+     * @author 李鹏
+     * @date 2016-01-07
+     */
+    public function delete($userid, $payid)
+    {
+        $where        = array('userid' => $userid, 'id' => $payid);
+        $deleteStatus = InitPHP::getDao('paySpend')->delete($where);
+        if ($deleteStatus) {
+            return InitPHP::Encode(0, 'Success', $deleteStatus, 1);
+        } else {
+            return InitPHP::Encode(1, 'Error', $deleteStatus, 1);
+        }
+    }
+
+    /**
+     * 获取所有支付工具
+     * @return [type] [description]
+     */
+    public function getPayment()
+    {
+        $data = InitPHP::getDao('pay')->getPayment();
+        if ($data) {
+            return InitPHP::Encode(0, 'Success', $data, 1);
+        } else {
+            return InitPHP::Encode(1, 'Error', '', 1);
+        }
+    }
+
+}

@@ -1,0 +1,78 @@
+$(function() {
+  'use strict';
+  $(document).on('pageInit', '#page-balance', function(e, id, page) {
+    var loginInfo = checkLogin();
+    if (!loginInfo) {
+      $.router.loadPage('login.php');
+    }
+    // $.showIndicator();
+    //获取余额
+    var url = encodeURI(apiUrl + 'account/index/getWallet');
+    $.ajax({
+      url: url,
+      async: false,
+      type: 'GET',
+      headers: {
+        "Token": sso_Token
+      },
+      success: function(respose) {
+        respose = JSON.parse(respose);
+        if (respose.code == 0) {
+          //隐藏加载器
+          $.hideIndicator();
+          var numAmount = 0;
+          var amount = parseFloat(respose['data']['amount']) ? parseFloat(respose['data']['amount']) : 0;
+          var myfrozenAmount = parseFloat(respose['data']['myfrozenAmount']) ? parseFloat(respose['data']['myfrozenAmount']): 0;
+          var salesAmount = parseFloat(respose['data']['salesAmount']) ? parseFloat(respose['data']['salesAmount']): 0;
+          var bonusAmount = parseFloat(respose['data']['current_month_bonus']) ? parseFloat(respose['data']['current_month_bonus']) :0;
+          var myFrozenBonus = parseFloat(respose['data']['myFrozenBonus']) ? parseFloat(respose['data']['myFrozenBonus']):0;
+          var teamFrozenBonus = parseFloat(respose['data']['teamFrozenBonus']) ? parseFloat(respose['data']['teamFrozenBonus']):0;
+          //可提现金额
+          //month-bonus-amount
+          $('#cash-amount').html(amount);
+          //冻结自营货款
+          $('#frozen-amount').html(myfrozenAmount);
+          // 本店销售金额
+          $('#month-sales-amount').html(salesAmount);
+          //推荐金
+          $('#month-bonus-amount').html(bonusAmount);
+          //总金额=可提现金额+冻结金额
+          numAmount = parseFloat(amount + myfrozenAmount + myFrozenBonus + teamFrozenBonus);
+          //总金额
+          $('#sun-amount').html(Number(numAmount.toString().match(/^\d+(?:\.\d{0,2})?/)));
+          //个人冻结业绩
+          $('#my-bonus-amount').html(myFrozenBonus);
+          //团队冻结业绩
+          $('#team-bonus-amount').html(teamFrozenBonus);
+        }else{
+          //隐藏加载器
+          $.hideIndicator();
+          $.toast();
+        }
+
+      },
+      error: function(err){
+        //隐藏加载器
+        $.hideIndicator();
+        $.toast('加载出错');
+      }
+
+    });
+    
+    // 微信支付
+    $(page).on('click','#recharge',function(){
+        var host = 'http://www.zj3w.net/';
+            // var host = sessionStorage.getItem('site_host');
+        var appid = sessionStorage.getItem('appid') || 'wx34fdd0d60e7d4514';
+        var fromurl ='http://api.zj3w.net/wxpay/index/code?&from=1';
+         if (isWeixin) {
+            var url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + appid + '&redirect_uri=' + encodeURIComponent(fromurl) + '&response_type=code&scope=snsapi_base&state=STATE%23wechat_redirect&connect_redirect=1#wechat_redirect';
+            location.href = url;
+            return false;
+        }
+
+    });
+  
+
+  });
+});

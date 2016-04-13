@@ -1,0 +1,213 @@
+<?php
+/**
+ * 业绩报表
+ * @Author: 刘波
+ * @Date:   2015-06-04 12:14:10
+ * @Last Modified time: 2016-03-25 16:47:28
+ */
+class BonusService extends Service
+{
+    public $openShopPrice;
+    public function __construct()
+    {
+        parent::__construct();
+        $this->order = InitPHP::getDao("orderGoods");
+        $this->bonus = InitPHP::getDao("orderBonus");
+    }
+
+    /**
+     * 我的店铺销售了平台产品的业绩汇总表
+     * @param  [type]  $shopid [店铺id]
+     * @param  [type]  $limit  [偏移数据]
+     * @param  integer $offset [偏移量，默认15]
+     * @return [type]          [description]
+     */
+    public function myBonus($shopid, $limit, $offset = 15)
+    {
+        $amount  = 3333;
+        $amount2 = 2000;
+        $amount2 = 150;
+        for ($i = 0; $i < $offset; $i++) {
+            $array[$i]['id']       = $id;
+            $array[$i]['title']    = '购买surfacepro364G国行版本';
+            $array[$i]['price']    = '6990';
+            $array[$i]['bonus']    = '38';
+            $array[$i]['datetime'] = date('Y/m/d', time());
+        }
+        $return = array('amount' => $amount, 'MonthAmount' => $amount2, 'DayAmount' => $amount3, 'lists' => $array,'total'=>100);
+        return InitPHP::Encode(0, 'Success', $return, 1);
+    }
+    /**
+     * 我的团队成员购买平台商品的时候给我带来的业绩汇总
+     * @param  [type]  $userid [description]
+     * @param  [type]  $limit  [description]
+     * @param  integer $offset [description]
+     * @return [type]          [description]
+     */
+    public function myTeamBonus($userid, $limit, $offset = 15)
+    {
+
+    }
+    /**
+     * 冻结金额 分页
+     * @param  [type] $userid [查询用户]
+     * @param  [type] $limit  [偏移数据]
+     * @param  [type] $offset [偏移量，默认15]
+     * @return [type]         [description]
+     */
+    public function frozenAmount($userid, $limit, $offset = 15)
+    {
+
+    }
+    /**
+     * 奖金
+     * *开店奖励记录
+     * capital_transactions 表记录
+     * @param $where
+     *      -- type=4
+     *      -- create_time
+     */
+    public function openShopBonus($where, $limit, $offset = 15)
+    {
+        //1.where 条件必须带有 type=4 ;这个是查询开店奖励的
+        //2.where 可以带 create_time ，时间区间
+    }
+
+    /**
+     * 店铺自营产品的销售报表
+     * @param  [type] $where  [description]
+     * @param  [type] $limit  [description]
+     * @param  [type] $offset [description]
+     * @return [type]         [description]
+     */
+    public function myShopBurnover($where, $limit, $offset)
+    {
+
+    }
+
+    /**
+     * 业绩报表查询列表
+     * @param  array   $where  [description]
+     * @param  integer $offset [description]
+     * @param  integer $num    [description]
+     * @return [type]          [description]
+     */
+    public function lists($where = array(), $offset = 0, $num = 15)
+    {
+        $result = $this->bonus->lists($where, $offset, $num, 'id', 'desc', 'id', ' * ', 'id');
+        $return = array();
+        $total  = 0;
+        if (count($result) > 0) {
+            foreach ($result[0] as $key => $value) {
+                $orderId                                        = $value['order_id'];
+                $return[$orderId]['userid']                     = $value['uid_1'];
+                $userinfo                                       = $this->getRedis('default')->redis()->hgetall('userinfo:' . $value['uid_1']);
+                $return[$orderId]['username']                   = $userinfo['nickname'] . ($userinfo['phone'] ? $userinfo['phone'] : '');
+                $return[$orderId]['data'][$key]                 = $value;
+                $return[$orderId]['data'][$key]['bonus']        = $value['bonus'] / 10000;
+                $return[$orderId]['data'][$key]['system_bonus'] = $value['system_bonus'] / 10000;
+                $return[$orderId]['data'][$key]['bonus_2']      = $value['bonus_2'] / 10000;
+                $return[$orderId]['data'][$key]['bonus_3']      = $value['bonus_3'] / 10000;
+                $return[$orderId]['data'][$key]['site_bonus']   = $value['site_bonus'] / 10000;
+                $return[$orderId]['data'][$key]['less_bonus']   = $value['less_bonus'] / 10000;
+                $return[$orderId]['data'][$key]['formula']      = json_decode($value['formula'], true);
+
+                $return[$orderId]['total'] += $value['order_total'];
+
+            }
+
+        }
+
+        return array($return, $result[1]);
+    }
+    /**
+     * 复制订单
+     * 将order_info 表数据复制到 bouns表中，形成奖励落地数据
+     * @param  [type] $orderId [订单号]
+     * @return [type]          [description]
+     */
+    public function CopyOrder($orderId)
+    {
+        $result = $this->order->select('order_id = ' . $orderId . ' and from_id = 1');
+        $insert = array();
+        //先检测是否允许插入
+        if ($this->bonus->checkOrder($orderId)) {
+            foreach ($result as $key => $value) {
+                if ($value['from_id'] !== '1') {
+                    continue;
+                }
+
+                //id,order_id,goods_id,goods_name,goods_sn,goods_number,goods_price,goods_level,goods_pic,
+                //cost_price,purchase_price,uid_1,level_1,uid_2,level_2,uid_3,level_3,siteid,site_level,inputtime,status
+                $insert['id']             = $value['og_id'];
+                $insert['order_id']       = $value['order_id'];
+                $insert['goods_id']       = $value['goods_id'];
+                $insert['goods_name']     = $value['goods_name'];
+                $insert['goods_sn']       = $value['goods_sn'];
+                $insert['goods_number']   = $value['goods_number'];
+                $insert['goods_price']    = $value['goods_price'];
+                $insert['goods_level']    = $value['goods_level'];
+                $insert['goods_pic']      = $value['goods_pic'];
+                $insert['order_total']    = $value['order_total'];
+                $insert['cost_price']     = $value['cost_price']; //商品成本价格,－外部使用
+                $insert['purchase_price'] = $value['purchase_price']; //商品采购价格,－内部使用
+                //卖家利润　＝　销售价　－　商品成本价格
+                $bonus           = ($value['goods_price'] - $value['cost_price']) * $value['goods_number'];
+                $insert['bonus'] = $bonus * 10000;
+                //平台利润　＝　销售价　－　商品采购价格
+                $insert['system_bonus'] = ($value['cost_price'] - $value['purchase_price']) * 10000;
+                //优先计算出　买家的等级
+                $insert['siteid']     = $value['shop_id'];
+                $site_level           = InitPHP::getDao("account")->getLevels($value['shop_id']);
+                $insert['site_level'] = $site_level;
+
+                //商品等级核算公式
+                $site_Level_co     = $this->getRedis('default')->redis()->hgetall('proLevel:' . $site_level . 'S');
+                $insert['formula'] = json_encode($site_Level_co);
+                //销售方利润
+                if ($value['shop_id'] > 1) {
+                    $insert['site_bonus'] = $bonus * (int) $site_Level_co['tA'] * 100;
+                } else {
+                    $insert['site_bonus'] = 0;
+                }
+                $level_1           = InitPHP::getDao("account")->getLevels($value['userid']);
+                $insert['uid_1']   = $value['userid'];
+                $insert['level_1'] = $level_1;
+
+                //推荐人利润
+                $uid_2 = InitPHP::getDao("account")->get(array('userid' => $value['YunUser']));
+                if ($value['YunUser'] > 1) {
+                    $insert['uid_2']   = $value['YunUser'];
+                    $insert['level_2'] = $uid_2['levels'];
+                    $insert['bonus_2'] = $bonus * (int) $site_Level_co['tB'] * 100;
+                } else {
+                    $insert['uid_2']   = 1;
+                    $insert['level_2'] = 1;
+                    $insert['bonus_2'] = 0;
+                }
+
+                //推荐人上级利润
+                if ($uid_2['parentid'] > 1) {
+                    $uid_3             = InitPHP::getDao("account")->get(array('userid' => $uid_2['parentid']));
+                    $insert['uid_3']   = $uid_3['userid'];
+                    $insert['level_3'] = $uid_3['levels'];
+                    $insert['bonus_3'] = $bonus * (int) $site_Level_co['tC'] * 100;
+                } else {
+                    $insert['userid']  = 1;
+                    $insert['levels']  = 1;
+                    $insert['bonus_3'] = 0;
+                }
+                //冗余利润
+                $insert['less_bonus'] = $insert['bonus'] - $insert['site_bonus'] - $insert['bonus_2'] - $insert['bonus_3'];
+
+                $insert['inputtime'] = time();
+                $insert['status']    = 0;
+
+                $this->bonus->create($insert);
+            }
+        }
+
+        return $result;
+    }
+
+}

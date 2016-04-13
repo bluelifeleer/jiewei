@@ -1,0 +1,173 @@
+<?php
+/**
+ * @Author: 翁昌华
+ * @Date:   2015-12-22
+ * 商品
+ */
+
+class productDao extends Dao {
+	public $table_name = 'product';
+	private $fields = 'id,title,keywords,short_desc,purchase_price,cost_price,sale_price,level,stock,pictures,thumb,catid,sales,is_up,is_hot,is_explosion,is_overseas,is_recommend,is_recycled,userid,username,create_time,update_time,sysadd,status,made,fromid,is_real,product_sn,transit_type,transit_cost';
+
+	/**
+	 * 添加一条记录
+	 * @param Array $data
+	 */
+	public function create($data) {
+		$data = $this->dao->db->build_key($data, $this->fields);
+		return $this->dao->db->insert($data, $this->table_name);
+	}
+
+	/**
+	 * 删除一条记录
+	 * @param Array $where
+	 */
+	public function delete($where) {
+		$where = $this->dao->db->build_key($where, $this->fields);
+		return $this->dao->db->delete_by_field($where, $this->table_name);
+	}
+	/**
+	 * 批量删除多条记录
+	 * @param Array $where array(1,2,3,4)
+	 */
+	public function deleteBatch($where) {
+		return $this->dao->db->delete($where, $this->table_name, 'id');
+	}
+	/**
+	 * 产品移动到回收站
+	 * @param Array  $where 多个id 组成的数组　array(1,2,3)
+	 * @param boolean  $in　　true 移入　　false 移出
+	 */
+	public function recycle($where, $in) {
+		// 回收站  1：存在产品库，99：存在于回收站
+		if ($in) {
+			$data['is_recycled'] = 99;
+		} else {
+			$data['is_recycled'] = 1;
+		}
+
+		return $this->dao->db->update_by_in_field($data, 'id', $where, $this->table_name);
+	}
+	/**
+	 *  产品上下架
+	 * @param Array $where 多个id 组成的数组　array(1,2,3)
+	 * @param boolean $up
+	 */
+	public function updateStatus($where, $up) {
+		//99：上架，1：仓库中
+		if ($up) {
+			$data['is_up'] = 99;
+		} else {
+			$data['is_up'] = 1;
+		}
+
+		return $this->dao->db->update_by_in_field($data, 'id', $where, $this->table_name);
+	}
+
+	/**
+	 * 获取一条数据
+	 * @param Array String $where 条件
+	 * @param String $fileds 需要获取的字段
+	 */
+	public function get($where, $fileds = '*') {
+		$where = $this->dao->db->build_key($where, $this->fields);
+		return $this->dao->db->get_one_by_field($where, $this->table_name, $fileds);
+	}
+
+	/**
+	 * 更新一条数据
+	 * @param Array String $data 需要更新的数据
+	 * @param String $where 更新条件
+	 */
+	public function update($data, $where) {
+		$where = $this->dao->db->build_key($where, $this->fields);
+		return $this->dao->db->update_by_field($data, $where, $this->table_name);
+	}
+
+	/**
+	 * 获取列表
+	 * @param $proLevel
+	 * @param $num 每次查询偏移量
+	 * @param $offset 分页量
+	 * LIMIT $num,$offset
+	 */
+	public function lists($where, $offset = 15, $num = 0, $sortname = 'id', $sortorder = 'desc', $fileds = '*') {
+
+		return $this->dao->db->get_all($this->table_name, $offset, $num, $where, $sortname, $sortorder, 'id', $fileds);
+	}
+
+	/**
+	 * 执行sql语句查询
+	 * @param $sql 字符串 sql语句条件
+	 */
+	public function query_select($where) {
+		$info = $this->dao->db->get_all_sql("select * from `" . $this->table_name . "` where  `path` LIKE '%," . $where . "%'");
+		return $info;
+	}
+
+	/**
+	 * 执行sql语句查询
+	 * @param $sql字符串　sql语句条件
+	 */
+	public function query_search_null($siteid, $search) {
+		//return "`userid` = ".$siteid. " AND fromid is null";
+		$info = $this->dao->db->get_all_sql("select * from `" . $this->table_name . "` where `userid` = '" . $siteid . "' AND fromid " . $search);
+		return $info;
+	}
+	/**
+	 * 通过某一字段更新多条数据的某一字段属性
+	 * @param array $where　更新条件　更新字段组成的数组array(1,2,3,4)
+	 * @param array $data　更新数据
+	 * @param string $filed 更新字段
+	 */
+	public function updateAttr($where, $data, $filed) {
+		return $this->dao->db->update_by_in_field($data, $filed, $where, $this->table_name);
+	}
+
+	/**
+	 * 开启事务
+	 */
+	public function transaction_start() {
+		$this->dao->db->transaction_start();
+	}
+	/**
+	 * 提交事务
+	 */
+	public function transaction_commit() {
+		return $this->dao->db->transaction_commit();
+	}
+	/**
+	 * 事务回滚
+	 */
+	public function transaction_rollback() {
+		$this->dao->db->transaction_rollback();
+	}
+
+	/**
+	 *根据栏目id获取商品信息
+	 * @return [type] [description]
+	 */
+	public function getProductInfoFromCatid($where) {
+		if (!is_array($where)) {
+			$catid = $where;
+		} else {
+			foreach ($where as $key => $value) {
+				$catid[] = $value;
+			}
+			$catid = implode(',', $catid);
+		}
+		return $this->dao->db->get_all_sql("select * from `" . $this->table_name . "` where `catid` in (" . $catid . ")");
+	}
+
+	/**
+	 * 获取商品的数量
+	 * @param  [array] $where [查询条件]
+	 * @return [integer] $counts   [商品的个数]
+	 * @author 李鹏
+	 * @date 2016-03-16
+	 */
+	public function getCounts($where) {
+		$where = $this->dao->db->build_key($where, $this->fields);
+		return $this->dao->db->get_count($this->table_name, $where);
+	}
+}

@@ -1,0 +1,147 @@
+<?php
+/**
+ * 售后服务
+ * @author 李鹏
+ * @date 2016-02-21
+ */
+class afterSalesService extends Service {
+
+	public function __construct() {
+		parent::__construct();
+	}
+
+	/**
+	 * 创建退货服务
+	 * @param [string] $order_id [要退货的订单id]
+	 * @param [integer] $goods_id [要退货的商品id]
+	 * @param [integer] $shop_id [要退货的商品所属店铺id]
+	 * @param [string] $userid [申请退货的用户id]
+	 * @param [string] $user_name [申请退货的用户姓名]
+	 * @param [string] $content [退货的理由]
+	 * @return [interge] $addId [返回添加的自增id]
+	 * @author 李鹏
+	 * @date 2016-02-22
+	 */
+	public function create($order_id, $goods_id, $shop_id, $userid, $user_name) {
+		//获取售后数据层对象
+		$afterSalesDao = InitPHP::getDao('afterSales');
+		$messageDao = InitPHP::getDao('message');
+		$orderInfoDB  = InitPHP::getDao('order');
+
+		$ $order = $this->getRedis('order')->redis()->hgetall('order:' . $order_id);
+        if (!$order) {
+            return;
+        }
+        //拒绝处理已取消订单
+        if ($order['is_cancel'] == 1) {
+            return;
+        }
+        //拒绝处理未支付订单
+        
+        if ($order['pay_status'] == 1) {
+            return;
+        }
+		//开启事务
+		$afterSalesDao->transaction_start();
+		//获取当前时间戳
+		
+		$timer = time();
+		
+		//获取商品信息
+		$getOrderGoodsWhere = array(
+			'order_id' => $order_id,
+			'goods_id' => $goods_id,
+		);
+
+	
+			$upDateOrderWhere = array(
+				'order_id' => $userid,
+				'userid' => $order_id,
+			);
+	
+		$orderGoodsDetail = InitPHP::getDao('orderGoods')->get($getOrderGoodsWhere);
+
+		}
+		// 售后数据
+		$data = array(
+			'order_id' => $order_id,
+			'goods_id' => $goods_id,
+			'userid' => $userid,
+			'user_name' => $user_name,
+			'shop_id' => $shop_id,
+			'goods_name' => $orderGoodsDetail['goods_name'],
+			'goods_sn' => $orderGoodsDetail['goods_sn'],
+			'goods_attr' => $orderGoodsDetail['goods_attr'],
+			'goods_number' => $orderGoodsDetail['goods_number'],
+			'goods_price' => $orderGoodsDetail['goods_price'],
+			'goods_pic' => $orderGoodsDetail['goods_pic'],
+			'content' => $content,
+			'is_agree' => 0,
+			'create_time' => $timer,
+		);
+
+		//给用户发消息数据
+		$sendBuyMsgData = array(
+			'to_userid' => $userid,
+			'from_userid' => '1',
+			'title' => '申请退货提醒',
+			'contents' => '您于' . date('Y-m-d H:i:s', $timer) . '提交退货请求(订单号：' . $order_id . '，商品名称：<a href="product.html?id=' . $goods_id . '&shop_id=' . $shop_id . '">' . $orderGoodsDetail['goods_name'] . '</a>)，请求已提交，等待店家同意。',
+			'type' => 1,
+			'is_read' => 0,
+			'create_time' => $timer,
+		);
+
+		//给店家发消息数据
+		$sendSellerMsgData = array(
+			'to_userid' => $shop_id,
+			'from_userid' => '1',
+			'title' => '有一条退货申请，请处理',
+			'contents' => '买家ID:' . $userid . '于' . date('Y-m-d H:i:s', $timer) . '提交退货请求(订单号：' . $order_id . '，商品名称：<a href="product.html?id=' . $goods_id . '&shop_id=' . $shop_id . '">' . $orderGoodsDetail['goods_name'] . '</a>)，请求已提交，<a href="">点击去处理</a>。',
+			'type' => 1,
+			'is_read' => 0,
+			'create_time' => $timer,
+		);
+
+		//修改订单商品的属性
+		$updateOrderGoodsWhere = array(
+			'order_id' => $order_id,
+			'goods_id' => $goods_id,
+		);
+		$updateOrderGoodsData = array(
+			'is_after_sales' => 2, //订单中的商品是否申请售后，0未申请，1同意退货，2，申请退货,3不同意退货
+		);
+
+		$addId = $afterSalesDao->create($data);
+		$sendBuyMsg = $messageDao->create($sendBuyMsgData);
+		$sendSellerMsg = InitPHP::getDao('message')->create($sendSellerMsgData);
+		$updateOrderGoodsStatus = InitPHP::getDao('orderGoods')->update($updateOrderGoodsData, $updateOrderGoodsWhere);
+
+		if ($addId && $sendBuyMsg && $sendSellerMsg ) {
+			$afterSalesDao->transaction_commit();
+			return InitPHP::Encode(0, 'Success', $addId, 1);
+		} else {
+			$afterSalesDao->transaction_rollback();
+			return InitPHP::Encode(1, 'Error', $addId, 1);
+		}
+	}
+
+	/**
+	 * 获取一组数据
+	 * @param  [array] $where  [查询条件]
+	 * @param  [integer] $num    [查询数量]
+	 * @param  [integer] $offset [查询偏移量]
+	 * @param  [string] $is_key [排序关键字]
+	 * @param  [string] $sort   [排序方式，默认DESC]
+	 * @param  [string] $field  [要查询的字段]
+	 * @return [array] $lists [返回查询到的数据]
+	 */
+	public function lists($where, $num, $offset, $is_key, $sort, $field) {
+		$lists = InitPHP::getDao('afterSales')->lists($where, $num, $offset, $is_key, $sort, $field);
+		if ($lists) {
+			return InitPHP::Encode(0, 'Success', $lists, 1);
+		} else {
+			return InitPHP::Encode(1, 'Error', $lists, 1);
+		}
+	}
+
+}

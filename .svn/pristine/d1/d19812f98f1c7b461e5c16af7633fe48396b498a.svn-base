@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>云兆云商城</title>
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+        <link rel="shortcut icon" href="/favicon.ico">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="stylesheet" href="/sources/css/sm.min.css"/>
+        <link rel="stylesheet" href="/sources/css/sm-extend.min.css"/>
+        <link rel="stylesheet" href="/sources/css/demos.css">
+        <link rel="stylesheet" href="/sources/css/add.css">
+    </head>
+    <body>
+        <div class="page" id="page-add-goods">
+            <header class="bar bar-nav">
+                <a class="pull-left back back" href="apply_shop_create_category.html">
+                    <i class="icon iconfont mar0 white">&#xe64c;</i>
+                </a>
+                <h1 class="title">导入商品</h1>
+            </header>　
+
+            <!--这里是内容区-->
+            <div class="content">
+                <div class="content-block-title">导入共享库商品</div>
+                <div class="list-block">
+                  <ul id="cate-list-block">
+                    <!--li class="item-content">
+                      <div class="item-media"><i class="icon icon-right"></i></div>
+                      <div class="item-inner">
+                        <div class="_catename item-title">栏目aaaa</div>
+                        <div class="item-after">导入商品</div>
+                      </div>
+                    </li>
+
+
+                    <a href="shop_add_product.html" class="external">
+                        <li class="item-content">
+                          <div class="item-media"><i class="icon icon-right"></i></div>
+                          <div class="item-inner">
+                            <div class="_catename item-title">栏目b</div>
+                            <div class="item-after"><span class="badge">5</span></div>
+                          </div>
+                        </li>
+                    </a>
+
+
+                    <a href="shop_add_product.html" class="external">
+                        <li class="item-content">
+                          <div class="item-media"></div>
+                          <div class="item-inner">
+                            <div class="_p_catename item-title">子栏目b</div>
+                            <div class="item-after"><span class="badge">5</span></div>
+                          </div>
+                        </li>
+                     </a>
+
+
+                    <li class="item-content">
+                      <div class="item-media"><i class="icon icon-right"></i></div>
+                      <div class="item-inner">
+                        <div class="_catename item-title">栏目C</div>
+                        <div class="item-after"><span class="badge">9</span></div>
+                      </div>
+                    </li-->
+
+                  </ul>
+                  <div class="list-block-label">当前一共导入<font id="pro_number">0</font>款产品
+                  <font class="pad30"><b>注:1S-10S为产品利润等级。
+                                  注解:1S=利润10%;2S=利润20%;3S=利润30%;以此类推</b>
+                  </font>
+                  </div>
+                  <div id="open-shop" class="block w80b marauto h50 lh50 txac white bgCB1408 mart20 borrad5">开通店铺</div>
+                </div>
+            </div>
+
+        </div>
+            <!-- 工具栏 -->
+            <nav class="bar bar-tab">
+                <a class="tab-item external" href="index.html">
+                    <i class="icon iconfont">&#xe640;</i>
+                    <span class="tab-label">首页</span>
+                </a>
+                <a class="tab-item external" href="#">
+                    <i class="icon iconfont">&#xe66f;</i>
+                    <span class="tab-label">界微</span>
+                </a>
+                <a class="tab-item external" href="cart.html">
+                    <i class="icon iconfont">&#xe62e;</i>
+                    <span class="tab-label">购物车</span>
+                </a>
+                <a class="tab-item external" href="order.html">
+                    <i class="icon iconfont">&#xe661;</i>
+                    <span class="tab-label">订单</span>
+                </a>
+                <a class="tab-item external active" href="#">
+                    <i class="icon iconfont">&#xe65e;</i>
+                    <span class="tab-label">我的</span>
+                </a>
+            </nav>
+
+            <!--这里是内容区-->
+    </body>
+<script type="text/javascript" src="/sources/js/zepto-full.1.1.6.min.js"></script>
+<script type="text/javascript" src="/sources/js/sm.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/sm-extend.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/sources/js/module/public.js"></script>
+<script type="text/javascript" src="/sources/js/module/jweixin-1.0.0.js"></script>
+
+<script type="text/javascript" src="/sources/js/webuploader.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/ueditor.all.js"> </script>
+
+<script type="text/javascript" charset="utf-8" src="/sources/js/ueditor/lang/zh-cn/zh-cn.js"></script>
+<script type='text/javascript' data-main="/sources/js/app.js" src='/sources/js/require.js' charset='utf-8'></script>
+</html>

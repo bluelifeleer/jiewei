@@ -1,0 +1,177 @@
+$(function() {
+  'use strict';
+  /**
+   *	用户注册
+   *	@auther 李鹏
+   *	@data 2015-12-15
+   *  @editDate 2015-12-23
+   */
+  $(document).on('pageInit', '#page-register', function(e, id, page) {
+    //是否禁用发送验证码默认false,不禁用
+    var disable = false;
+    var timer = null;
+    //倒计时是否正在运行
+    var isRun = false;
+
+
+    /**
+     * 判断此号码是否可以注册
+     */
+    $(page).on('blur', '#phone', function() {
+      var phone = $(this).val();
+      if (phone.length != 11) {
+        $.toast('手机号码不能大于或少于11位', 2000);
+        return;
+      } else if (!(/^1[3|4|5|8][0-9]\d{4,8}$/.test($("#phone").val()))) {
+        $.toast('手机号码格式不正确', 2000);
+        return;
+      } else {
+        var url = encodeURI(apiUrl + 'account/index/isExists/no/' + phone);
+
+        $.ajax({
+          url: url,
+          async: false,
+          type: 'GET',
+          headers: {
+            "Token": sso_Token
+          },
+          success: function(status) {
+            status = JSON.parse(status);
+            if(status.code == 2){//已注册
+              $.toast('手机号已注册，请登录。',2000);
+              $('#send-valiDate-code-but').css({
+                'background': '#B7B7B7',
+                'color': '#888888'
+              });
+              $('#send-valiDate-code-but').attr('data-is-send', false);
+              setTimeout(function() {
+                $.router.loadPage('login.html');
+              }, 4000);
+              disable = true;//禁用发送验证码
+              return false;
+            }else{
+              disable = false;//可以发送验证码
+            }
+          }
+
+        });
+      }
+    });
+    //短信验证码判断
+    $(page).on("click", "#send-valiDate-code-but", function() {
+      if(isRun) return;
+      if (disable) return;
+      isRun = true;
+      var _this = $(this);
+      //验证码有效时间，６０秒
+      var count = 60;
+      //获取输入的手机号
+      var mobile = $('#phone').val();
+      var url = encodeURI(apiUrl + 'account/mobileValidate/send/mobile/' + mobile);
+      if (!(/^1[3|4|5|8][0-9]\d{4,8}$/.test(mobile))) {
+        $('#tcp').css('display', 'block');
+        $('#phone').focus();
+      } else {
+        $('#tcp').css('display', 'none');
+        //如果倒计时正在运行则退出单击事件
+        if (!isRun) return;
+        //运行倒计时
+        timer = setInterval(function() {
+          if (count <= 0) {
+            clearInterval(timer);
+            isRun = false;
+            _this.html('获取验证码(60)');
+            _this.css({
+              'background': '#04980B',
+              'color': '#FFF'
+            });
+          } else {
+            count--;
+            isRun = true;
+            if (count <= 9) {
+              count = "0" + count;
+            } else {
+              count = count;
+            }
+            _this.css({
+              'background': '#B7B7B7',
+              'color': '#888888'
+            });
+            _this.html('验证码已发送(' + count + ')');
+          }
+        }, 1000);
+        //发送验证码
+
+        $.ajax({
+          url: url,
+          async: false,
+          type: 'GET',
+          headers: {
+            "Token": sso_Token
+          },
+          success: function(status) {
+            status = JSON.parse(status);
+            if (status['code'] != 0) {
+              clearInterval(timer);
+              isRun = false;
+              $('#send-valiDate-code-but').css({
+                'background': '#04980B',
+                'color': '#FFF'
+              }).html('获取验证码(60)');
+              return false;
+            }
+          },
+          error:function(err){
+            $.toast(err);
+          }
+
+        });
+
+      }
+    })
+
+    //the next
+    $(page).on('click', '#next-but', function() {
+      //判断输入是否为空
+      if ($('#phone').val() == '') {
+        $.toast('手机号不能为空2');
+        return false;
+      } else {
+        //获取用户输入验证码
+        var verificationCode = $('#input-verification-code-box').val();
+        if (verificationCode.length < 6) {
+          $.toast('请输入有效验证码');
+          return false;
+        }
+        //判断验证码是否正确
+        var url = encodeURI(apiUrl + 'account/mobileValidate/checkVailCode/vailcode/' + verificationCode);
+
+        $.ajax({
+          url: url,
+          async: false,
+          type: 'GET',
+          dataType: "json",
+          headers: {
+            "Token": sso_Token
+          },
+          success: function(result) {
+            if (result['code'] == 0) {
+              var phone = $('#phone').val();
+              var data = '{"phone":"' + phone + '","verifi":"' + verificationCode + '"}';
+              sessionStorage.setItem('reg_mesg', data);
+              $.router.loadPage('password.html');
+            } else {
+              $.toast('验证码错误');
+              return false;
+            }
+          },
+          error:function(err){
+            $.toast(err);
+          }
+
+        });
+      }
+    });
+  });
+  //
+});

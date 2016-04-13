@@ -1,0 +1,27 @@
+$(function () {
+	'use strict';
+
+	//获取二维码
+	$(document).on("pageInit", "#qr", function(e, id, page) {
+		var userInfo =  sessionStorage.getItem('user_info');
+		var siteid = sessionStorage.getItem('site_info') != null ? JSON.parse(sessionStorage.getItem('site_info')).siteid : '1';
+		if(userInfo)userInfo = JSON.parse(userInfo);
+		if(!userInfo)location.replace('http://www.zj3w.net/login.php');
+		$.ajax({
+			type: "POST",
+			url: apiUrl+"userQcode/index/userQcode",
+			data: {siteid:siteid},
+			headers: {"Token":sso_Token},
+			success: function(result){
+				var res = JSON.parse(result);
+				if(res['code'] == 200){
+					//$('.qr').html(res['data']);
+					$('.qr').html('<img class="marauto w70b mart30" src="'+res['data']+'" alt="">');
+				}else{
+					$.toast(res['error']);
+				}
+			}
+		});
+	});
+
+});

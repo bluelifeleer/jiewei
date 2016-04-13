@@ -1,0 +1,102 @@
+$(function () {
+	'use strict';
+	
+	$(document).on("pageInit", "#select-cate-icon", function(e, id, page) {
+		//加载栏目icon图标
+		var catid = getRrlParam('catid');
+        if (isEmpty(catid)) {
+           $.toast('参数错误！正在转到首页....', 1000, 'error');
+           var siteid = sessionStorage.getItem('site_info') != null ? JSON.parse(sessionStorage.getItem('site_info')).siteid : '1';
+            $.router.loadPage("index.html?siteid=" + siteid); //转到首页
+            return false;
+        }
+		var url = encodeURI(apiUrl + 'shop/index/showCateImage');
+		 $.ajax({
+            url: url,
+            async: false,
+            type: 'GET',
+            data:{
+            	catid:catid
+            },
+            headers: {
+                "Token": sso_Token
+            },
+            success: function(result) {
+                var data = $.parseJSON(result);
+                var data =data.data;
+                $('.page-current .selectedItem').find('.path').attr('src',data.image);
+        		$('.page-current .selectedItem').find('.name').html(data.catname);
+
+            }
+        });
+		//显示栏目列表
+        var html = '';
+        var url = encodeURI(apiUrl + 'shop/index/showCateIcon');
+        $.ajax({
+            url: url,
+            async: false,
+            type: 'GET',
+            headers: {
+                "Token": sso_Token
+            },
+            success: function(result) {
+                var data = $.parseJSON(result);
+                data = data.data;
+                $.each(data, function(key, item) {
+                	html +='<div class="col-20 padb10 iconItem">';
+                	html += '<div class="w50 h50 borrad50 marauto" style="cursor:pointer;">';
+                	html += '<img  src="'+item.path+'" class="w50 h50 borrad50 marauto path" alt="placeholder+image" />'
+                	html += '</div>';
+                	html += '<div class="name">'+item.name+'</div>';
+                	html += '</div>';
+                });
+                $('.page-current #cateIcon').html(html);
+            }
+        });
+
+        //点击选择
+        $(page).on('click','.iconItem',function(){
+        	var src = $(this).find('.path').attr('src');
+        	$('.page-current .selectedItem').find('.path').attr('src',src);
+        	$('.page-current .selectedItem').find('.path').attr('data-change','true');
+        });
+
+        //提交
+        $(page).on('click','.iconSubmit',function(){
+        	
+	        var isChange = $('.page-current .selectedItem').find('.path').attr('data-change');
+	        if(isChange == 'true'){
+	        	var image = $('.page-current .selectedItem').find('.path').attr('src');
+
+	        	var url = encodeURI(apiUrl + 'shop/index/upCateIcon');
+	        	$.ajax({
+	        	    url: url,
+	        	    async: false,
+	        	    type: 'POST',
+	        	    data:{
+	        	    	catid : catid,
+	        	    	image:image
+	        	    },
+	        	    headers: {
+	        	        "Token": sso_Token
+	        	    },
+	        	    success: function(result) {
+	        	    	var data = $.parseJSON(result);
+		        	    	if(data.code == 0){
+		        	    		$.toast('修改成功！', 1000, 'success');
+		        	    	}else{
+		        	    		$.toast('修改失败！', 1000, 'error');
+		        	    	}
+	        	    	}
+	        	    		
+	        	});
+
+
+	        }else{
+	        	$.toast('请选择你要修改的栏目icon图标', 1000, 'error');
+	        }
+
+        })
+
+	});
+});

@@ -1,0 +1,347 @@
+$(function(){
+	'use strict';
+	$(document).on('pageInit','#page-open-shop',function(e,id,page){
+		//判断是否登录
+		var user = checkLogin('1');
+		if(!user){
+			$.router.loadPage('login.php');
+			return false;
+		}
+
+		 // 支付获取code
+	      function jsApiCall(info) {
+	        WeixinJSBridge.invoke('getBrandWCPayRequest', info, function(res) {
+	            WeixinJSBridge.log(res.err_msg);
+	            if (res.err_msg == 'get_brand_wcpay_request:ok') {
+	                sessionStorage.setItem('vpaystatu', 'ok');
+	            }
+	            if (res.err_msg == 'get_brand_wcpay_request:cancel') {
+	                sessionStorage.setItem('vpaystatu', 'cancel');
+	            }
+	            if (res.err_msg == 'get_brand_wcpay_request:fail') {
+	                sessionStorage.setItem('vpaystatu', 'fail');
+	            }
+	        });
+	    }
+	    //
+	    function callpay(info) {
+	        if (typeof WeixinJSBridge == "undefined") {
+	            if (document.addEventListener) {
+	                document.addEventListener('WeixinJSBridgeReady', jsApiCall, false);
+	            } else if (document.attachEvent) {
+	                document.attachEvent('WeixinJSBridgeReady', jsApiCall);
+	                document.attachEvent('onWeixinJSBridgeReady', jsApiCall);
+	            }
+	        } else {
+	            jsApiCall(info);
+	        }
+	    }
+		//获取支付工具
+		var url = encodeURI(apiUrl+'pay/index/getPayment');
+		$.ajax({
+			url:url,
+			type:'GET',
+			async:false,
+			headers:{
+				Token:sso_Token
+			},
+			success:function(res){
+				var url = encodeURI(apiUrl + 'account/index/getWallet');
+				var amount = 0;
+			    $.ajax({
+			      url: url,
+			      async: false,
+			      type: 'GET',
+			      headers: {
+			        "Token": sso_Token
+			      },
+			      success: function(respose) {
+			        respose = JSON.parse(respose);
+			        if (respose.code == 0) {
+			          //隐藏加载器
+			          $.hideIndicator();
+			          var numAmount = 0;
+			          amount = parseFloat(respose['data']['amount']) ? parseFloat(respose['data']['amount']) : 0;
+			          
+			        }else{
+			          //隐藏加载器
+			          $.hideIndicator();
+			          $.toast();
+			        }
+
+			      },
+			      error: function(err){
+			        //隐藏加载器
+			        $.hideIndicator();
+			        $.toast('加载出错');
+			      }
+
+			    });
+				res = JSON.parse(res);
+				var htmlStr = '';
+				var payType = '';
+				if(res.code == 0){
+					for(var i=0; i < res.data.length; i++){
+						if(parseInt(res.data[i]['pay_id']) == 2){
+							payType = '<div class="select-pay-type-but w100b h40 lh40 borb1 bcc1c1c1 mar0 iconfont fs07 c06BE04" data-selected="true" data-value="'+ res.data[i]['pay_id'] +'-pay">&#xe657;&nbsp;微信支付</div>';
+						}else if(parseInt(res.data[i]['pay_id']) == 3){
+							payType = '<!--div class="select-pay-type-but w100b h40 lh40 borb1 bcc1c1c1 mar0 iconfont fs07 cfa6a0b" data-selected="true" data-value="'+ res.data[i]['pay_id'] +'-pay">&#xe656;&nbsp;</div-->';
+						}else{
+							payType = '<div class="select-pay-type-but w100b h40 lh40 borb1 bcc1c1c1 mar0 iconfont fs07" data-selected="true" data-value="'+ res.data[i]['pay_id'] +'-pay">&#xe682;&nbsp;余额支付 <span class="cb1408 amount">（'+amount+'）</span></div>';
+						}
+						htmlStr += '<div class="card-content-inner ovfh mar0">'+
+							    payType+
+							'</div>';
+					}
+					$('#pay-type-lists-block').html(htmlStr);
+				}else{
+					$.toast('error');
+				}
+			},
+			error:function(err){
+				console.log(err);
+			}
+		});
+
+
+		//展开/关闭支付选择列表
+		$(page).on('click','#select-pay-type-but',function(){
+			if($(this).attr('data-is-show') == 'false'){
+				$('#select-pay-type-option-block').css('display','block');
+				$(this).attr('data-is-show',true);
+			}else{
+				$('#select-pay-type-option-block').css('display','none');
+				$(this).attr('data-is-show',false);
+			}
+		});
+
+
+		//选择支付方式
+		$(page).on('click','.select-pay-type-but',function(){
+			if(parseInt($(this).attr('data-value')) == 2){
+				$('#pay-type').html('微信支付');
+				$('.select-pay-type-but').removeClass('c06BE04');
+				$(this).addClass('c06BE04');
+				$('#pay-type').attr('data-pay-type-value',parseInt($(this).attr('data-value')));
+			}else if(parseInt($(this).attr('data-value')) == 3){
+				$('#pay-type').html('支付宝支付');
+				$('.select-pay-type-but').removeClass('c06BE04');
+				$(this).addClass('c06BE04');
+				$('#pay-type').attr('data-pay-type-value',parseInt($(this).attr('data-value')));
+			}else{
+				$('#pay-type').html('余额支付');
+				$('.select-pay-type-but').removeClass('c06BE04');
+				$(this).addClass('c06BE04');
+				$('#pay-type').attr('data-pay-type-value',parseInt($(this).attr('data-value')));
+			}
+			// $('#select-pay-type-option-block').css('display','none');
+			// $('#select-pay-type-but').attr('data-is-show',false);
+		});
+
+		//提交支付
+		$(page).on('click','#submit-but',function(){
+			$.showIndicator();
+			var total = $('.total-title').attr('data-total-value');
+			var payType = $('#pay-type').attr('data-pay-type-value');
+
+			/**
+			 * 如果是余额支付，判断余额是否满足支付的金额
+			 * @author 李鹏
+			 * @data 2016-03-04
+			 */
+			if(parseInt(payType) == 1){
+				$.ajax({
+					url : apiUrl+'account/index/getWallet',
+					type : 'GET',
+					async : false,
+					headers : {
+						Token : sso_Token
+					},
+					success:function(res){
+						res = JSON.parse(res);
+						if(res.code == 0){
+							if(parseFloat(res.data['amount']) < parseFloat(total)){
+								$.hideIndicator();
+								$.confirm('余额不足，请选择微信支付', function(){
+				                 	// $.router.loadPage('recharge.php');
+				                }, function(){
+				                	$.hideIndicator();
+				                	return false;
+				                });
+							}else{
+								var url = encodeURI(apiUrl+'account/index/openShop');
+								$.ajax({
+									url:url,
+									type:'POST',
+									async:false,
+									headers: {
+							          "Token": sso_Token
+							        },
+									data:{
+										'total':total,
+										'payType':payType
+									},
+									success:function(res){
+										res = JSON.parse(res);
+										if(res.code == 0){
+											$.hideIndicator();
+											$.toast('支付成功');
+											setTimeout(function(){
+												$.router.loadPage('apply_shop.php');
+											},3000);
+										}else{
+											$.hideIndicator();
+											$.toast('支付失败');
+											return false;
+										}
+									},
+									error:function(err){
+										$.hideIndicator();
+										$.toast(err);
+									}
+								});
+							}
+						}else{
+							console.log('error');
+							$.hideIndicator();
+						}
+					},
+					error:function(err){
+						console.log(err);
+						$.hideIndicator();
+					}
+				});
+			}else{
+				//微信支付
+
+				 $.modal({
+                title: '请在新开页面完成支付！',
+                afterText:  '<div style="color:#0894ec;text-align:left;"><span style="color:red;">温馨提示：</span>请您在开店信息填写栏目中，填写正确收货地址，我们将赠送您价值280元左右的豪华大礼包快递到您手中。如若地址不正确，导致无法收到大礼包，我们不负责任哦！(^o^) </div>',
+                buttons: [{
+                    text: '重试',
+                    onClick: function() {
+                      $.hideIndicator();
+                      
+
+                      sessionStorage.removeItem('vpaystatu');
+                      
+                    }
+                }, {
+                    text: '完成支付',
+                    onClick: function() {
+                        var statu = sessionStorage.getItem('vpaystatu');
+                         $.hideIndicator();
+                        if (statu == 'ok') {
+                            
+                            // 开店开始
+                      $.ajax({
+							url : apiUrl+'account/index/getWallet',
+							type : 'GET',
+							async : false,
+							headers : {
+								Token : sso_Token
+							},
+							success:function(res){
+								res = JSON.parse(res);
+								if(res.code == 0){
+									if(parseFloat(res.data['amount']) < parseFloat(total)){
+										$.hideIndicator();
+										$.confirm('余额不足，请先充值', function(){
+						                 	$.router.loadPage('recharge.php');
+						                }, function(){
+						                	$.hideIndicator();
+						                	return false;
+						                });
+									}else{
+										var url = encodeURI(apiUrl+'account/index/openShop');
+										$.ajax({
+											url:url,
+											type:'POST',
+											async:false,
+											headers: {
+									          "Token": sso_Token
+									        },
+											data:{
+												'total':total,
+												'payType':payType
+											},
+											success:function(res){
+												res = JSON.parse(res);
+												if(res.code == 0){
+													$.hideIndicator();
+													$.toast('支付成功');
+													setTimeout(function(){
+														$.router.loadPage('apply_shop.php');
+													},3000);
+												}else{
+													$.hideIndicator();
+													$.toast('支付失败');
+													return false;
+												}
+											},
+											error:function(err){
+												$.hideIndicator();
+												$.toast(err);
+											}
+										});
+									}
+								}else{
+									console.log('error');
+									$.hideIndicator();
+								}
+							},
+							error:function(err){
+								console.log(err);
+								$.hideIndicator();
+							}
+						});
+                      // 开店结束
+                             
+                            sessionStorage.removeItem('vpaystatu');
+                            
+                        }
+                        if (statu == 'cancel') {
+                            $.hideIndicator();
+
+                            $.alert('支付失败')
+                        }
+                        if (statu == 'fail') {
+                            $.hideIndicator();
+                            $.alert('支付失败')
+                        }
+                    }
+                }, ]
+            })
+            
+            var openid = getRrlParam('openid');
+            // alert(openid);
+            var fee = parseFloat(total);
+            //如果有openid就获取info 调用支付
+            $.ajax({
+                type: "GET",
+                url: encodeURI(apiUrl+'wxpay/index/vpay')+"?fee=" + fee + "&openid=" + openid,
+                async: false,
+                headers: {
+                  "Token": sso_Token
+                },
+                success: function(result) {
+                    // alert(result);
+                    if (result != '0') {
+                        var data = JSON.parse(result);
+                        var info = JSON.parse(data.data);
+                        callpay(info);
+                    } 
+                    // else {
+                    //     $.router.loadPage('recharge_choice.php');
+                    // }
+                },
+                error: function() {
+                    wcpay_request_cancel();
+                }
+            });
+				// 微信支付结束
+			}
+			
+		});
+	});
+});

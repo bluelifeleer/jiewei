@@ -1,0 +1,128 @@
+<?php
+class indexController extends Controller
+{
+    public $initphp_list = array('payOrder');
+    public $today,$cleaningTimeStart,$cleaningTimeEnd,$bonus;
+    public function __construct()
+    {
+        parent::__construct();
+        //设定给核算提成的周期
+        $this->today = strtotime(date('Y-m-d 00:00:01',time()));
+        $stepDays = 0; //可以控制 的天数，测试期为0 ，表示今天
+        $step = 86400;
+        $this->cleaningTimeStart = $this->today - ($stepDays*$step);
+        $this->cleaningTimeEnd = $this->today - ($stepDays*$step) + ($step-2);
+        //
+        $this->bonus = InitPHP::getDao('orderBonus');
+    }
+    public function init (){
+        //查询范围
+        //--范围开始 -默认是 $stepDays天前的早上00：00：01
+        $cleaningTimeStart = $this->cleaningTimeStart;
+        //--范围结束 -默认是 $stepDays 天前的早上23：59：59
+        $cleaningTimeEnd = $this->cleaningTimeEnd;
+        //echo date('Y-m-d H:i:s',$cleaningTimeEnd).'<br>';
+
+        $where = " `is_over`=1 AND `is_after_sales` !=1 AND `is_after_sales` !=2 AND `from_id`=1 AND `goods_status`=3 AND `shipping_time` between ".$cleaningTimeStart." and ".$cleaningTimeEnd;
+        //1. 已结算，并且非退款及申请退款中商品，并且已发货状态，且发货时间在 核算周期内的商品
+        $waitingList = InitPHP::getDao('orderGoods')->select($where);
+        //2. 拒绝退款，且发货时间 超过15 （限定周期）天的。
+        
+        if(!empty($waitingList))
+        foreach ($waitingList as $key => $value) {
+            $this->copyBonus($value);
+        };
+        //$this->logs(json_encode($waitingList));
+    }
+
+    /**
+     * 成功复制信息到 提成表
+     * @param  [type] $value [description]
+     * @return [type]        [description]
+     */
+    public function copyBonus($value){
+                $orderId = $value['order_id'];
+                $goodsId = $value['goods_id'];
+                if (!$this->bonus->checkOrder($orderId,$value['goods_id'])) {
+                    $msg = date('m-d H:i:s',time()).' 订单号已存在:'.$orderId.':'.$goodsId."\r\n";
+                    $this->logs($msg);
+                    return true;
+                }
+                $insert['id']             = $value['og_id'];
+                $insert['order_id']       = $value['order_id'];
+                $insert['goods_id']       = $value['goods_id'];
+                $insert['goods_name']     = $value['goods_name'];
+                $insert['goods_sn']       = $value['goods_sn'];
+                $insert['goods_number']   = $value['goods_number'];
+                $insert['goods_price']    = $value['goods_price'];
+                $insert['goods_level']    = $value['goods_level'];
+                $insert['goods_pic']      = $value['goods_pic'];
+                $insert['order_total']    = $value['order_total'];
+                $insert['cost_price']     = $value['cost_price']; //商品成本价格,－外部使用
+                $insert['purchase_price'] = $value['purchase_price']; //商品采购价格,－内部使用
+                //卖家利润　＝　销售价　－　商品成本价格
+                $bonus           = ($value['goods_price'] - $value['cost_price']) * $value['goods_number'];
+                $insert['bonus'] = $bonus * 10000;
+                //平台利润　＝　销售价　－　商品采购价格
+                $insert['system_bonus'] = ($value['cost_price'] - $value['purchase_price']) * 10000;
+                //优先计算出　买家的等级
+                $insert['siteid']     = $value['shop_id'];
+                $site_level           = InitPHP::getDao("account")->getLevels($value['shop_id']);
+                $insert['site_level'] = $site_level;
+
+                //商品等级核算公式
+                $site_Level_co     = $this->getRedis('default')->redis()->hgetall('proLevel:' . $site_level . 'S');
+                $insert['formula'] = json_encode($site_Level_co);
+                //销售方利润
+                if ($value['shop_id'] > 1) {
+                    $insert['site_bonus'] = $bonus * (int) $site_Level_co['tA'] * 100;
+                } else {
+                    $insert['site_bonus'] = 0;
+                }
+                $uid_1             = InitPHP::getDao("account")->get(array('userid' => $value['userid']));
+                $insert['uid_1']   = $uid_1['userid'];
+                $insert['level_1'] = $uid_1['level'];
+
+                //推荐人利润
+                $uid_2 = InitPHP::getDao("account")->get(array('userid' => $uid_1['parentid']));
+                if ($uid_1['parentid'] > 1) {
+                    $insert['uid_2']   = $uid_2['userid'];
+                    $insert['level_2'] = $uid_2['levels'];
+                    $insert['bonus_2'] = $bonus * (int) $site_Level_co['tB'] * 100;
+                } else {
+                    $insert['uid_2']   = 1;
+                    $insert['level_2'] = 1;
+                    $insert['bonus_2'] = 0;
+                }
+
+                //推荐人上级利润
+                if ($uid_2['parentid'] > 1) {
+                    $uid_3             = InitPHP::getDao("account")->get(array('userid' => $uid_2['parentid']));
+                    $insert['uid_3']   = $uid_3['userid'];
+                    $insert['level_3'] = $uid_3['levels'];
+                    $insert['bonus_3'] = $bonus * (int) $site_Level_co['tC'] * 100;
+                } else {
+                    $insert['userid']  = 1;
+                    $insert['levels']  = 1;
+                    $insert['bonus_3'] = 0;
+                }
+                //冗余利润
+                $insert['less_bonus'] = $insert['bonus'] - $insert['site_bonus'] - $insert['bonus_2'] - $insert['bonus_3'];
+                $insert['inputtime'] = time();
+                $insert['status']    = 0;
+                $res = $this->bonus->create($insert);
+                if($res){
+                    InitPHP::getDao('orderGoods')->update(array('is_over'=>99),array('order_id'=>$orderId,'goods_id'=>$goodsId,'goods_status'=>$value['goods_status'],'shipping_time'=>$value['shipping_time']));
+                    $msg = date('m-d H:i:s',time()).' 记录订单号:'.$orderId.':'.$goodsId."\r\n";
+                    $this->logs($msg);
+                }else{
+                    $msg = date('m-d H:i:s',time()).' 订单插入失败:'.$orderId.':'.$goodsId."\r\n";
+                    $this->logs($msg);
+                }
+                
+    }
+
+    public function logs ($msg){
+        error_log($msg, 3, APP_PATH.'error_log.php');
+    }
+}

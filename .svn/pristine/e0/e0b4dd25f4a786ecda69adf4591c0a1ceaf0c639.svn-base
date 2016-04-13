@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * 测试api
+ * @Author: 明艺
+ * @Date:   2015-07-23 10:26:49
+ * @Last Modified time: 2016-01-01 20:06:22
+ */
+class indexController extends Controller
+{
+    
+    //Action白名单
+    public $initphp_list = array(
+        'userQcode'//获得二维码
+    );
+    public function __construct() {
+        parent::__construct();
+    }
+    public function init(){
+       exit('API IS REDAY!');
+    }
+}

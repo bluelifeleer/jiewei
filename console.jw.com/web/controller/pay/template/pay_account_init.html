@@ -1,0 +1,127 @@
+{V "system","header"}
+<body class="body pxgridsbody" style="background-color: #fff;">
+<link rel="stylesheet" href="/resource/js/layer/skin/layer.css">
+<link rel="stylesheet" href="/resource/css/order_lists.css">
+<section class="wrapper">
+<!-- page start-->
+<div class="row" style="min-height:650px;">
+    <div class="col-lg-12">
+        <section class="panel">
+            <!-- <header class="panel-heading">
+                <a id="index-addCate" class="btn btn-default btn-sm" href="{U($url,'account','index','logisCreate')}"><i class="icon-gears2 btn-icon"></i>添加物流公司</a>
+            </header> -->
+            <header class="panel-heading">
+                <span class="dropdown addcontent">
+                    <a class="btn btn-info btn-sm" target="iframeid" href="{U(1,'order','index','order_lists')}">所有订单</a>
+                </span>
+                <span class="dropdown examine">
+                    <a data-hover="dropdown" data-toggle="dropdown" class="btn btn-primary btn-sm dropdown-toggle" href="#" aria-expanded="false">
+                        <i class="icon-check btn-icon"></i>
+                        排序方式
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a target="iframeid" href="{U(1,'order','index','order_lists',array('num' => 5,'page' => 0,'is_key' => 'id','sort' => 'ASC'))}">正序</a>
+                        </li>
+                        <li>
+                            <a target="iframeid" href="{U(1,'order','index','order_lists',array('num' => 5,'page' => 0,'is_key' => 'id','sort' => 'DESC'))}">倒序</a>
+                        </li>
+                        <li>
+                            <a target="iframeid" href="{U(1,'order','index','order_lists',array('num' => 5,'page' => 0,'is_key' => 'add_time','sort' => 'ASC'))}">下单时间正序</a>
+                        </li>
+                        <li>
+                            <a target="iframeid" href="{U(1,'order','index','order_lists',array('num' => 5,'page' => 0,'is_key' => 'add_time','sort' => 'DESC'))}">下单时间倒序</a>
+                        </li>
+                    </ul>
+                </span>
+                <span class="dropdown examine"></span>
+                <form method="post" action="{U(1,'order','index','search')}" class="pull-right position">
+                    <div class="input-append dropdown">
+                        <input type="text" value="{$like}" class="sr-input" placeholder="输入订单号快速查找" name="order_id">
+                        <button class="btn adsr-btn" type="submit"><i class="icon-search"></i></button>
+                    </div>
+                </form>
+            </header>
+            <div class="panel-body" id="panel-bodys">
+                <div class="order-lists-block">
+                  {loop $orderCollection $v}
+                    <div class="order-lists">
+                      <div class="order-block-title"><span>订单号：{$v['order_id']}</span><span style="margin-left:300px;">下单时间：{date('Y-m-d H:i:s',$v['add_time'])}</span></div>
+                      <div class="order-block-header">
+                        <div class="order-header-goods-pic" style="border-bottom:1px solid #c1c1c1;">商品图片</div>
+                        <div class="order-header-goods-desc" style="border-bottom:1px solid #c1c1c1;">商品描述</div>
+                        <div class="order-header-goods-price" style="border-bottom:1px solid #c1c1c1;">商品单价</div>
+                        <div class="order-header-goods-num" style="border-bottom:1px solid #c1c1c1;">商品数量</div>
+                        <div class="order-header-goods-total" style="border-bottom:1px solid #c1c1c1;">商品总金额</div>
+                        <div class="order-header-goods-attr" style="border-bottom:1px solid #c1c1c1;">商品属性</div>
+                        <div class="order-header-goods-operation" style="border-bottom:1px solid #c1c1c1;width:201px;">操作</div>
+                      </div>
+                      <div class="order-block-content" style="height:auto;">
+                        {loop $v['goods'][0][0] $goods}
+                        <div class="order-block-header" style="height:120px;">
+                          <div class="order-header-goods-pic" style="height:120px;padding:10px 0;border-bottom:1px solid #c1c1c1;border-top:none;"><img src="{$goods['goods_pic']}" style="width:80px;height:100px;"></div>
+                          <div class="order-header-goods-desc" style="height:120px;border-bottom:1px solid #c1c1c1;border-top:none;">{$goods['goods_name']}</div>
+                          <div class="order-header-goods-price" style="height:120px;border-bottom:1px solid #c1c1c1;border-top:none;">{$goods['goods_price']}</div>
+                          <div class="order-header-goods-num" style="height:120px;border-bottom:1px solid #c1c1c1;border-top:none;">{$goods['goods_number']}</div>
+                          <div class="order-header-goods-total" style="height:120px;border-bottom:1px solid #c1c1c1;border-top:none;">{sprintf('%01.2f',sprintf('%01.2f',$goods['goods_price'])*intval($goods['goods_number']))}</div>
+                          <div class="order-header-goods-attr" style="height:120px;border-bottom:1px solid #c1c1c1;border-top:none;">
+                            <!-- {substr($goods['goods_attr'],1,intval(strlen($goods['goods_attr'])-2))} -->
+                            <!--商品属性-->
+                          </div>
+                          <div class="order-header-goods-operation" style="height:120px;border-bottom:1px solid #c1c1c1;width:201px;border-top:none;">
+                            
+                          </div>
+                        </div>
+
+                        {/loop}
+                      </div>
+                      <div class="order-info-block" style="margin-top:20px;">
+                        <!-- <div class="order-info-operation"　style="height:30px;"> -->
+                            {if $v['order_status'] == 2}
+                                订单操作:<a href="{U($url,'order','index','delivery',array('goodsid'=>$goods['goods_id'],'orderid'=>$v['order_id']))}" class="btn btn-primary btn-xs" style="margin-left:60px;display:block;width:80px;height:30px;line-height:30px;margin-top:10px;">发货</a>
+                            {elseif $v['order_status'] == 3}
+                                订单操作:<a href="javascript:void(0);" class="btn btn-primary btn-xs" style="margin-left:60px;display:block;width:80px;height:30px;line-height:30px;margin-top:10px;">已发货</a>
+                                <span style="display:block;width:120px;height:40px;margin:0 auto;font-size:13px;">剩余：{date('d天H时',intval($v['lock_time']-$lockTime))}</span>
+                            {elseif $v['order_status'] == 4}
+                                订单操作:<a href="javascript:void(0);" class="btn btn-primary btn-xs" style="margin-left:60px;display:block;width:80px;height:30px;line-height:30px;margin-top:10px;">已收货</a>
+                            {elseif $v['order_status'] == 5}
+                                订单操作:<a href="javascript:void(0);" class="btn btn-primary btn-xs" style="margin-left:60px;display:block;width:80px;height:30px;line-height:30px;margin-top:10px;">售后中</a>
+                            {elseif $v['order_status'] == 99}
+                                订单操作:<a href="javascript:void(0);" class="btn btn-primary btn-xs" style="margin-left:60px;display:block;width:80px;height:30px;line-height:30px;margin-top:10px;">已完成</a>
+                            {else}
+                                订单操作:<a href="javascript:void(0);" class="btn btn-primary btn-xs" style="background:#BDC3C7;color:#7F8C8D;margin-left:60px;display:block;width:80px;height:30px;line-height:30px;margin-top:10px;border-color:#9EADAE;">未付款</a>
+                            {/if}
+                        <!-- </div> -->
+                        <div class="order-info-amount" style="height:30px;">订单金额：{$v['order_amount']}</div>
+                        <div class="order-pay-type" style="height:30px;">支付方式：{$v['pay_name']}</div>
+                        <div class="order-pay-no" style="height:30px;">支付单号：{$v['pay_no']}</div>
+                        <div class="order-pay-no" style="height:30px;">支付时间：{date('Y-m-d H:i:s',$v['pay_time'])}</div>
+                        <div class="order-info-address" style="height:30px;">收货地址：{$v['country']}&nbsp;&nbsp;{$v['province']}&nbsp;&nbsp;{$v['city']}&nbsp;&nbsp;{$v['district']}&nbsp;&nbsp;{$v['address']}&nbsp;&nbsp;{$v['zipcode']}&nbsp;&nbsp;{$v['mobile']}&nbsp;&nbsp;{$v['consignee']}</div>
+                        <!-- <div class="order-info-shipping-type" style="height:30px;">物流方式：{$v['shipping_name']}</div>
+                        <div class="order-info-shipping-total" style="height:30px;">物流费用：{$v['shipping_fee']}</div> -->
+                        <div class="order-info-coupons" style="height:30px;">优惠：{$v['coupons_total']}</div>
+                        <!-- <div class="order-info-mask" style="height:30px;">订单备注：{$v['order_remark']}</div> -->
+                      </div>
+                    </div>
+                  {/loop}
+                </div>
+                <div class="panel-body">
+                    <div>
+                        <ul class="pagination pagination-sm">
+                             {$pages}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+<!-- page end-->
+</section>
+<script src="/resource/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="/resource/js/jquery.nicescroll.js" type="text/javascript"></script>
+<script src="/resource/js/pxgrids-scripts.js" type="text/javascript"></script>
+<script src="/resource/js/layer/layer.js" type="text/javascript"></script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+/*
+* @Author: seaven
+* @Date:   2016-01-01 21:35:07
+* @Last Modified by:   anchen
+* @Last Modified time: 2016-03-30 18:35:44
+*/
+$(function(){
+    'use strict';
+    $(document).on('pageInit',"#page-shop-product-manage",function(e,id,page){
+      var siteid =  sessionStorage.getItem('userid');
+      var loading = false;
+      var pages = 1;
+      var offset = 8;
+      var orderby = 1;
+      var cateid = 0;
+      var fromid = getRrlParam('fromid');
+      //if(fromid == 0){
+      var max = product_add_Items(offset,pages,siteid,fromid);
+      // }else{
+      //   var max = product_add_Items(offset, pages, orderby,siteid);
+      // }
+       
+
+
+       //图片懒加载
+       $('.product-list-thumb').picLazyLoad({
+         threshold: 0,
+         placeholder: '/sources/images/defaultpic.gif'
+       });
+
+       loading = max > offset ? false : true;
+       
+
+       if (loading) {
+         // 加载完毕，则注销无限加载事件，以防不必要的加载
+         $.detachInfiniteScroll($('.infinite-scroll'));
+         // 删除加载提示符
+         //$('.infinite-scroll-preloader').remove();
+         $(".preloader_null").removeClass("disn");
+         $(".preloader").addClass("disn");
+       }
+
+       //----------------------------------------------
+
+
+       /**
+        * 下拉列表
+        * @param
+        */
+       $(page).on('infinite', function() {
+         dropRefresh(max,offset,pages,orderby,loading);
+         pages++;
+       });
+
+       //----------------------------------------------
+
+
+       function dropRefresh(max,offset,pages,orderby,loading){
+
+         // 如果正在加载，则退出
+         //图片懒加载
+         $('.product-list-thumb').picLazyLoad({
+           threshold: 0,
+           placeholder: '/sources/images/defaultpic.gif'
+         });
+         var siteid = sessionStorage.getItem('userid');
+         if (loading) return false;
+         loading = true;
+         if (max > (pages * offset)) {
+           // 更新页码
+           pages++
+           // 添加新条目
+           max = product_add_Items(offset, pages, orderby, siteid);
+
+           // 重置加载flag
+           loading = false;
+           // 容器发生改变,如果是js滚动，需要刷新滚动
+           $.refreshScroller();
+         } else {
+           // 加载完毕，则注销无限加载事件，以防不必要的加载
+           $.detachInfiniteScroll($('.infinite-scroll'));
+           // 删除加载提示符
+           //$('.infinite-scroll-preloader').remove();
+           $(".preloader_null").removeClass("disn");
+           $(".preloader").addClass("disn");
+
+           return false;
+         }
+
+       }
+
+
+       //----------------------------------------------
+    });
+
+    
+});
+ 
+ /**
+  * 获取产品
+ * @param  {[type]} id [商铺id]
+ * @return {[type]}    [description]
+ */
+function product_add_Items(offset,pages,siteid,fromid) {
+        var url = encodeURI(apiUrl + 'shop/index/showShopProduct');
+        $.ajax({
+                type: "GET",
+                url: url,
+                async: false,
+                data: {'offset':offset,'pages':pages,siteid:siteid,fromid:fromid},
+                dataType: "json",
+                headers: {"Token":sso_Token},
+                success: function(result){
+                      if(result.code == 0){
+                        var html = '';
+                        for(var i=0; i < result.data.length; i++){
+                          var levelhtml = '';
+                          if(result.data[i].level != null){
+                            levelhtml = '<div class="c999">商品等级:'+result.data[i].level+'</div>';
+                          }
+                          var deleteButHTML = '<a class="delete-product-but external iconfont fs15" href="javascript:void(0);" data-product-id="'+result.data[i].id+'" data-is-up="'+result.data[i].is_up+'" style="position:absolute;right:0;top:0;z-index:99;">&#xe61a;</a>';
+                          var url = result.data[i].fromid != null ? 'shop_product_detail_manage.html?id='+result.data[i].id:'shop_product_create.html?id='+result.data[i].id;
+                          html += '<div id="product-list-'+result.data[i].id+'" class="pad10 bgfff borb1 bce6" style="position:relative;left:0;top:0">'+
+                              '<a class="c999" data-no-cache="true" href="'+url+'" data-id="'+result.data[i].id+'">'+
+                              '<div class="w80 fll">'+
+                              '<a class="c666" data-no-cache="true" href="'+url+'" data-id="'+result.data[i].id+'">'+
+                              '<img class="w80 pos-r" onError="this.onerror=null;this.src=\'/sources/images/defaultpic.gif\';" style="top:50%;" src="'+result.data[i].thumb+'" alt=""></a>'+
+                              '</div><div class="w60b fs06 fll padl10 padr0">'+
+                              '<a class="c666 fs07" data-no-cache="true" href="'+url+'" data-id="'+result.data[i].id+'">'+
+                              '<div style="min-height:36px;">'+result.data[i].title+'</div></a>'+
+                              levelhtml +
+                              '<div class="c999 "> 销量：'+result.data[i].sales+' </div>'+
+                              '<div class="fs09  cfa6a0b"><span class="fs06">价格：&yen;</span>'+result.data[i].sale_price+'</div>'+
+                              '</div></a>'+
+                              '<div class="w10b flr" style="padding-top:20px;"><a class="c666" data-no-cache="true" href="'+url+'" data-id="'+result.data[i].id+'">'+
+                              '<div class=" h40  txac borrad50 flr" style="line-height:35px;">'+
+                              '<i class="icon iconfont fs06 mar0 padr10">&#xe648;</i>'+
+                              '</div>'+
+                              '</a></div>'+
+                              '<div class="clear"></div>'+
+                              deleteButHTML+
+                            '</div>'; 
+                        }
+                        $('.infinite-scroll .list-container').html(html);
+                      }else{
+                        $.toast('暂无商品');
+                      }
+                    },
+                    error:function(err){
+                      $.toast('网络失败，请稍后再试');
+                    }
+              });
+
+
+      }
+
+       //----------------------------------------------
+
+
+
+
+          /**
+           * 删除商品
+           */
+          $(document).on('click','.delete-product-but',function(){
+            var _this = this;
+            var productId = parseInt($(this).attr('data-product-id'));
+            var shopId = sessionStorage.getItem('userid');
+            //查询商品数量
+            var url = encodeURI(apiUrl+'product/index/getCounts/shop_id/'+shopId);
+            $.ajax({
+              url:url,
+              type:'GET',
+              async:false,
+              headers:{
+                "Token":sso_Token
+              },
+              success:function(res){
+                res = JSON.parse(res);
+                if(res.code == 0){
+                  if(parseInt(res.data) <= 30){
+                    $.toast('您的商品数量不足30款，要删除商品请先添加商品');
+                    return false;
+                  }else{
+                    if(parseInt($(_this).attr('data-is-up')) == 99){
+                      $.confirm('您确定删除此商品吗？',function(){
+                        deleteProduct(productId);
+                      },function(){
+                        return false;
+                      });
+                    }else{
+                      deleteProduct(productId);
+                    }
+                  }
+                }else{
+                  $.toast('获取商品数量失败，请稍后再试');
+                  return false;
+                }
+              },
+              error:function(err){
+                $.toast('网络出错，请稍后再试');
+                return false;
+              }
+            });
+            
+});
+
+            /**
+             * 删除商品
+             * @param  {[string]} productId [商品id]
+             * @return {[type]}           [description]
+             * @author 李鹏
+             * @data 2016-03-16
+             */
+            function deleteProduct(productId){
+              var url = encodeURI(apiUrl+'product/index/deleteProduct/product_id/'+productId);
+              $.ajax({
+                url:url,
+                type:'GET',
+                async:false,
+                headers:{
+                  "Token":sso_Token
+                },
+                success:function(res){
+                  res = JSON.parse(res);
+                  if(res.code == 0){
+                    $.confirm('删除成功是否去添加商品？',function(){
+                      $('#product-list-'+productId).remove();
+                      $.router.loadPage('shop_product_add.html',true);
+                    },function(){
+                      $('#product-list-'+productId).remove();
+                      return false;
+                    });
+                  }else{
+                    $.toast('删除出错，请稍后再试');
+                    return false;
+                  }
+                },
+                error:function(err){
+                  $.toast('网络出错，请稍后再试');
+                  return false;
+                }
+              });
+            }
+
+
+       //----------------------------------------------
+
+          
